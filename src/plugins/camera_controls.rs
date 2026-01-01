@@ -1,4 +1,4 @@
-use crate::app_state::AppState;
+use crate::states::AppState;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 
