@@ -1,39 +1,35 @@
 use bevy::prelude::*;
-use RUSTGAME::camera;
+use rust_game::app_state::AppState;
+use rust_game::camera::CameraControls;
+use rust_game::game_world_entity::GameWorldEntity;
+use rust_game::province::Province;
+use rust_game::terrain_type::TerrainType;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .init_state::<AppState>()
+        .add_systems(OnEnter(AppState::InGame), setup_new_map)
+        .add_systems(OnExit(AppState::InGame), clear_game_entities)
+        .add_plugins(CameraControls)
         .add_systems(Startup, setup)
-        .add_systems(Update, (
-            camera::camera_keyboard_controls,
-            camera::camera_scroll_controls,
-        ))
+        .add_systems(Update, menu_input)
         .run();
 }
 
-#[derive(Component)]
-struct Province {
-    id: u32,
-    terrain: TerrainType,
+fn menu_input(mut next_state: ResMut<NextState<AppState>>, keyboard: Res<ButtonInput<KeyCode>>) {
+    if keyboard.just_pressed(KeyCode::Enter) {
+        next_state.set(AppState::InGame);
+    }
 }
 
-#[derive(Clone, Copy)]
-enum TerrainType {
-    Plains,
-    Forest,
-    Mountains,
-    City,
+fn setup_new_map() {
+    //todo!()
 }
 
-impl TerrainType {
-    fn color(&self) -> Color {
-        match self {
-            TerrainType::Plains => Color::srgb(0.4, 0.8, 0.3),
-            TerrainType::Forest => Color::srgb(0.2, 0.5, 0.2),
-            TerrainType::Mountains => Color::srgb(0.5, 0.5, 0.5),
-            TerrainType::City => Color::srgb(0.7, 0.7, 0.8),
-        }
+fn clear_game_entities(mut commands: Commands, query: Query<Entity, With<GameWorldEntity>>) {
+    for entity in &query {
+        commands.entity(entity).despawn();
     }
 }
 
@@ -45,29 +41,61 @@ fn setup(
     // Camera at angle
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(0.0, 300.0, 400.0)
-            .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+        Transform::from_xyz(0.0, 300.0, 400.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
     ));
 
-    // Directional light (sun)
+    //commands.insert_resource(AmbientLight {
+    //    color: Color::WHITE,
+    //    brightness: 5000.0,
+    //    affects_lightmapped_meshes: true,
+    //});
+
+    // Test 1: Simple cube at origin (RED)
     commands.spawn((
-        DirectionalLight {
-            illuminance: 10000.0,
-            shadows_enabled: true,
+        Mesh3d(meshes.add(Cuboid::new(50.0, 50.0, 50.0))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: Color::srgb(1.0, 0.0, 0.0), // RED
             ..default()
-        },
-        Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.7, -0.3, 0.0)),
+        })),
+        Transform::from_xyz(0.0, 25.0, 0.0),
+        GameWorldEntity,
     ));
 
-    // Ambient light
-    commands.insert_resource(AmbientLight {
-        color: Color::WHITE,
-        brightness: 200.0,
-        affects_lightmapped_meshes: false,
-    });
+    // Test 2: Green cube to the right
+    commands.spawn((
+        Mesh3d(meshes.add(Cuboid::new(50.0, 50.0, 50.0))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: Color::srgb(0.0, 1.0, 0.0), // GREEN
+            ..default()
+        })),
+        Transform::from_xyz(100.0, 25.0, 0.0),
+        GameWorldEntity,
+    ));
+
+    // Test 3: Blue cube to the left
+    commands.spawn((
+        Mesh3d(meshes.add(Cuboid::new(50.0, 50.0, 50.0))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: Color::srgb(0.0, 0.0, 1.0), // BLUE
+            ..default()
+        })),
+        Transform::from_xyz(-100.0, 25.0, 0.0),
+        GameWorldEntity,
+    ));
+
+    // Test 4: Yellow sphere
+    commands.spawn((
+        Mesh3d(meshes.add(Sphere::new(30.0))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: Color::srgb(1.0, 1.0, 0.0), // YELLOW
+            ..default()
+        })),
+        Transform::from_xyz(0.0, 30.0, 100.0),
+        GameWorldEntity,
+    ));
 
     // Define province centers and types
-    let province_data = vec![
+    let province_data = [
         (Vec3::new(0.0, 0.0, 0.0), TerrainType::City),
         (Vec3::new(100.0, 0.0, 50.0), TerrainType::Plains),
         (Vec3::new(-100.0, 0.0, 50.0), TerrainType::Forest),
@@ -80,117 +108,71 @@ fn setup(
         (Vec3::new(-100.0, 0.0, -150.0), TerrainType::Forest),
     ];
 
-    // Create provinces as hexagons (simplified Voronoi)
+    // Create provinces as hexagons
     for (i, (center, terrain)) in province_data.iter().enumerate() {
-        // Create hexagonal province
         let radius = 60.0;
-        let mut vertices = Vec::new();
-        let mut indices = Vec::new();
-        let mut normals = Vec::new();
+        let hex_height = 0.5;
 
-        // Center vertex
-        vertices.push([center.x, center.y, center.z]);
-        normals.push([0.0, 1.0, 0.0]);
-
-        // Hexagon vertices
-        for j in 0..6 {
-            let angle = (j as f32) * std::f32::consts::PI / 3.0;
-            let x = center.x + radius * angle.cos();
-            let z = center.z + radius * angle.sin();
-            vertices.push([x, center.y, z]);
-            normals.push([0.0, 1.0, 0.0]);
-        }
-
-        // Create triangles
-        for j in 0..6 {
-            indices.push(0);
-            indices.push(j + 1);
-            indices.push(if j == 5 { 1 } else { j + 2 });
-        }
-
-        let mut mesh = Mesh::new(
-            bevy::mesh::PrimitiveTopology::TriangleList,
-            bevy::asset::RenderAssetUsages::default(),
-        );
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-        mesh.insert_indices(bevy::mesh::Indices::U32(indices));
+        // Create hexagonal mesh
+        let mesh = create_hexagon_mesh(*center, radius, hex_height);
 
         commands.spawn((
             Mesh3d(meshes.add(mesh)),
             MeshMaterial3d(materials.add(StandardMaterial {
                 base_color: terrain.color(),
+                unlit: true,
                 ..default()
             })),
             Province {
                 id: i as u32,
                 terrain: *terrain,
+                x: center.x,
+                z: center.z,
             },
-        ));
-
-        // Add border outline
-        create_hexagon_border(
-            &mut commands,
-            &mut meshes,
-            &mut materials,
-            *center,
-            radius,
-        );
-    }
-}
-
-fn create_hexagon_border(
-    commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    center: Vec3,
-    radius: f32,
-) {
-    let border_color = Color::srgb(0.1, 0.1, 0.1);
-    let border_height = 2.0;
-    let border_thickness = 1.0;
-    let y_offset = 0.5; // Slightly above ground
-
-    // Create 6 edges of the hexagon
-    for i in 0..6 {
-        let angle1 = (i as f32) * std::f32::consts::PI / 3.0;
-        let angle2 = ((i + 1) as f32) * std::f32::consts::PI / 3.0;
-
-        // Calculate the two endpoints of this edge
-        let p1 = Vec3::new(
-            center.x + radius * angle1.cos(),
-            y_offset,
-            center.z + radius * angle1.sin(),
-        );
-        let p2 = Vec3::new(
-            center.x + radius * angle2.cos(),
-            y_offset,
-            center.z + radius * angle2.sin(),
-        );
-
-        // Edge properties
-        let edge_center = (p1 + p2) / 2.0;
-        let edge_direction = (p2 - p1).normalize();
-        let edge_length = p1.distance(p2);
-
-        // Create rotation to align the cuboid along the edge
-        // Cuboid is created along X-axis by default, so we need to rotate it
-        // to point in the edge_direction
-        let rotation = Quat::from_rotation_arc(Vec3::X, edge_direction);
-
-        commands.spawn((
-            Mesh3d(meshes.add(Cuboid::new(edge_length, border_height, border_thickness))),
-            MeshMaterial3d(materials.add(StandardMaterial {
-                base_color: border_color,
-                unlit: true,
-                ..default()
-            })),
-            Transform {
-                translation: edge_center,
-                rotation,
-                scale: Vec3::ONE,
-            },
+            GameWorldEntity,
         ));
     }
 }
 
+fn create_hexagon_mesh(center: Vec3, radius: f32, height: f32) -> Mesh {
+    let mut positions = Vec::new();
+    let mut normals = Vec::new();
+    let mut uvs = Vec::new();
+    let mut indices = Vec::new();
+
+    // Top face vertices
+    // Center vertex
+    positions.push([center.x, height, center.z]);
+    normals.push([0.0, 1.0, 0.0]);
+    uvs.push([0.5, 0.5]);
+
+    // Hexagon outer vertices (top face)
+    for j in 0..6 {
+        let angle = (j as f32) * std::f32::consts::PI / 3.0;
+        let x = center.x + radius * angle.cos();
+        let z = center.z + radius * angle.sin();
+        positions.push([x, height, z]);
+        normals.push([0.0, 1.0, 0.0]);
+
+        let u = 0.5 + 0.5 * angle.cos();
+        let v = 0.5 + 0.5 * angle.sin();
+        uvs.push([u, v]);
+    }
+
+    // Create triangles for top face (7 vertices: 0 = center, 1-6 = outer)
+    for j in 0..6 {
+        indices.push(0);
+        indices.push(if j == 5 { 1 } else { j + 2 });
+        indices.push(j + 1);
+    }
+
+    // In Bevy 0.17, use Mesh::new() which returns the mesh directly
+    Mesh::new(
+        bevy::mesh::PrimitiveTopology::TriangleList,
+        bevy::asset::RenderAssetUsages::default(),
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, positions)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
+    //.with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+    .with_inserted_indices(bevy::mesh::Indices::U32(indices))
+}

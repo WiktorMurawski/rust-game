@@ -1,7 +1,19 @@
-use bevy::prelude::*;
+use crate::app_state::AppState;
 use bevy::input::mouse::MouseWheel;
+use bevy::prelude::*;
 
-pub fn camera_keyboard_controls(
+pub struct CameraControls;
+
+impl Plugin for CameraControls {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            Update,
+            (camera_keyboard_controls, camera_scroll_controls).run_if(in_state(AppState::InGame)),
+        );
+    }
+}
+
+fn camera_keyboard_controls(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut camera_q: Query<&mut Transform, With<Camera3d>>,
     time: Res<Time>,
@@ -33,7 +45,7 @@ pub fn camera_keyboard_controls(
     }
 }
 
-pub fn camera_scroll_controls(
+fn camera_scroll_controls(
     mut scroll_events: MessageReader<MouseWheel>,
     mut camera_q: Query<&mut Transform, With<Camera3d>>,
 ) {
