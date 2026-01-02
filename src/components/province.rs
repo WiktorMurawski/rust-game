@@ -1,11 +1,12 @@
-use bevy::prelude::*;
+use bevy::{platform::collections::HashSet, prelude::*};
 
 #[derive(Component)]
 pub struct Province {
     pub id: u32,
     pub center: Vec2,
-    pub polygon: Vec<Vec2>,
     pub terrain: TerrainType,
+    pub polygon: Vec<Vec2>,
+    pub neighbors: HashSet<u32>,
 }
 
 pub struct ProvinceDef {

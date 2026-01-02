@@ -1,3 +1,4 @@
+use crate::components::province::Province;
 use crate::components::GameWorldEntity;
 use crate::plugins::map_generation::setup_map;
 use crate::states::AppState;
@@ -10,7 +11,11 @@ impl Plugin for GameSystems {
         app.add_systems(Startup, setup)
             .add_systems(Update, menu_input)
             .add_systems(OnEnter(AppState::InGame), setup_map)
-            .add_systems(OnExit(AppState::InGame), clear_game_entities);
+            .add_systems(OnExit(AppState::InGame), clear_game_entities)
+            .add_systems(
+                Update,
+                print_provinces_on_p.run_if(in_state(AppState::InGame)),
+            );
     }
 }
 
@@ -27,4 +32,41 @@ fn menu_input(mut next_state: ResMut<NextState<AppState>>, keyboard: Res<ButtonI
         next_state.set(AppState::InGame);
         println!("SETTING APPSTATE TO INGAME");
     }
+}
+
+fn print_provinces_on_p(keyboard: Res<ButtonInput<KeyCode>>, query: Query<&Province>) {
+    // Only react on just-pressed (not held)
+    if !keyboard.just_pressed(KeyCode::KeyP) {
+        return;
+    }
+
+    println!("\n══════════════════════════════════════════");
+    println!("         PROVINCE NEIGHBORS (P pressed)      ");
+    println!("══════════════════════════════════════════");
+
+    let mut provinces: Vec<&Province> = query.iter().collect();
+    // Optional: sort by ID so output is stable/readable
+    provinces.sort_by_key(|p| p.id);
+
+    for province in provinces {
+        let mut neighbor_ids: Vec<u32> = province.neighbors.iter().copied().collect();
+        neighbor_ids.sort(); // nice-to-have: sorted output
+
+        let neighbor_list = if neighbor_ids.is_empty() {
+            "(none)".to_string()
+        } else {
+            neighbor_ids
+                .iter()
+                .map(|&id| id.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+
+        println!(
+            "Province {:4} → neighbors: [{}]",
+            province.id, neighbor_list
+        );
+    }
+
+    println!("Total provinces: {}\n", query.iter().count());
 }
