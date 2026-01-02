@@ -18,14 +18,6 @@ impl Plugin for GameCamera {
     }
 }
 
-//fn setup_camera(mut commands: Commands) {
-//    commands.spawn((
-//        Camera3d::default(),
-//        Transform::from_xyz(100.0, 300.0, -400.0).looking_at(Vec3::new(100.0, 0.0, 0.0), Vec3::Y),
-//        GameWorldEntity,
-//    ));
-//}
-
 fn setup_camera(mut commands: Commands) {
     let mut transform =
         Transform::from_xyz(0.0, 300.0, -400.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y);
@@ -48,13 +40,17 @@ fn camera_keyboard_controls(
         return;
     };
 
-    let speed = 300.0 * time.delta_secs();
+    let mut speed = 300.0 * time.delta_secs();
 
     // Calculate forward and right directions based on camera orientation
     // but only in the XZ plane (ignore Y component for movement)
     let forward = camera.forward();
     let forward_xz = Vec3::new(forward.x, 0.0, forward.z).normalize();
     let right_xz = Vec3::new(forward.z, 0.0, -forward.x).normalize();
+
+    if keyboard.pressed(KeyCode::ShiftLeft) {
+        speed *= 2.0;
+    }
 
     // WASD movement
     if keyboard.pressed(KeyCode::KeyW) {

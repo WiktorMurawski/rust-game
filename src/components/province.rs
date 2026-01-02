@@ -14,6 +14,9 @@ pub struct ProvinceDef {
     pub terrain: TerrainType,
 }
 
+#[derive(Component)]
+pub struct OwnedBy(pub Entity);
+
 #[derive(Clone, Copy)]
 pub enum TerrainType {
     Water,
