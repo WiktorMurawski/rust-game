@@ -1,4 +1,4 @@
-use crate::province::{Province, ProvinceDef};
+use crate::components::province::{Province, ProvinceDef};
 use bevy::prelude::*;
 use earcutr::earcut;
 use voronoice::Point;
@@ -11,6 +11,11 @@ fn build_voronoi(centers: &[Vec2], map_size: Vec2) -> Option<voronoice::Voronoi>
             y: p.y as f64,
         })
         .collect();
+
+    println!("sites generated:");
+    for s in &sites {
+        println!("{:?}", s);
+    }
 
     voronoice::VoronoiBuilder::default()
         .set_sites(sites)

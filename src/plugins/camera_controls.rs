@@ -1,22 +1,48 @@
+use crate::components::GameWorldEntity;
+use crate::resources::MapSize;
 use crate::states::AppState;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 
-pub struct CameraControls;
+pub struct GameCamera;
 
-impl Plugin for CameraControls {
+impl Plugin for GameCamera {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (camera_keyboard_controls, camera_scroll_controls).run_if(in_state(AppState::InGame)),
-        );
+        app.add_systems(OnEnter(AppState::InGame), setup_camera)
+            .insert_resource(ClearColor(Color::srgb_u8(69, 199, 255)))
+            .add_systems(
+                Update,
+                (camera_keyboard_controls, camera_scroll_controls)
+                    .run_if(in_state(AppState::InGame)),
+            );
     }
+}
+
+//fn setup_camera(mut commands: Commands) {
+//    commands.spawn((
+//        Camera3d::default(),
+//        Transform::from_xyz(100.0, 300.0, -400.0).looking_at(Vec3::new(100.0, 0.0, 0.0), Vec3::Y),
+//        GameWorldEntity,
+//    ));
+//}
+
+fn setup_camera(mut commands: Commands) {
+    let mut transform =
+        Transform::from_xyz(0.0, 300.0, -400.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y);
+
+    transform.rotate_around(
+        Vec3::new(0.0, 0.0, 0.0),
+        Quat::from_axis_angle(Vec3::Y, 90.0f32.to_radians()),
+    );
+
+    commands.spawn((Camera3d::default(), transform, GameWorldEntity));
 }
 
 fn camera_keyboard_controls(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut camera_q: Query<&mut Transform, With<Camera3d>>,
     time: Res<Time>,
+    map_size: Res<MapSize>,
 ) {
     let Ok(mut camera) = camera_q.single_mut() else {
         return;
@@ -43,6 +69,12 @@ fn camera_keyboard_controls(
     if keyboard.pressed(KeyCode::KeyD) {
         camera.translation -= right_xz * speed;
     }
+
+    camera.translation.x = camera
+        .translation
+        .x
+        .clamp(-400.0 - map_size.0.x, map_size.0.x - 400.0);
+    camera.translation.z = camera.translation.z.clamp(-map_size.0.y, map_size.0.y);
 }
 
 fn camera_scroll_controls(
@@ -72,7 +104,12 @@ fn camera_scroll_controls(
         let rotation_degrees = MIN_ANGLE + (zoom_factor * (MAX_ANGLE - MIN_ANGLE));
         let rotation_radians = rotation_degrees.to_radians();
 
-        // Apply rotation (rotate around X axis to tilt camera)
-        camera.rotation = Quat::from_rotation_x(-rotation_radians);
+        //println!("Camera rotation before: {}", camera.rotation);
+
+        let desired_pitch = -rotation_radians;
+        let (yaw, _current_pitch, roll) = camera.rotation.to_euler(EulerRot::YXZ);
+        camera.rotation = Quat::from_euler(EulerRot::YXZ, yaw, desired_pitch, roll);
+
+        //println!("Camera rotation after:  {}", camera.rotation);
     }
 }
