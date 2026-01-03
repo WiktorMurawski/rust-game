@@ -1,9 +1,10 @@
-use crate::components::province::{Province, ProvinceDef, TerrainType};
+use crate::components::province::{Province, ProvinceBorder, ProvinceDef};
 use crate::components::GameWorldEntity;
 use crate::resources::MapSize;
 use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
 use earcutr::earcut;
+use serde::{Deserialize, Serialize};
 use voronoice::{Point, Voronoi};
 
 fn build_voronoi(centers: &[Vec2], map_size: Vec2) -> Option<voronoice::Voronoi> {
@@ -105,7 +106,7 @@ fn calculate_neighbors(voronoi_diagram: &Voronoi) -> Vec<HashSet<usize>> {
 pub fn generate_provinces(province_defs: &[ProvinceDef], map_size: Vec2) -> Vec<Province> {
     let province_centers: Vec<Vec2> = province_defs
         .iter()
-        .map(|p| Vec2::new(p.center.x, p.center.y))
+        .map(|p| Vec2::new(p.center.0, p.center.1))
         .collect();
 
     let voronoi_diagram =
@@ -120,7 +121,7 @@ pub fn generate_provinces(province_defs: &[ProvinceDef], map_size: Vec2) -> Vec<
         .enumerate()
         .map(|(cell_idx, (prov_def, poly))| Province {
             id: prov_def.id,
-            center: prov_def.center,
+            center: prov_def.center.into(),
             terrain: prov_def.terrain,
             polygon: poly,
             // Convert cell indices → province IDs
@@ -141,7 +142,7 @@ fn add_background_mesh(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mesh = Rectangle::new(width as f32, height as f32);
+    let mesh = Rectangle::new(width, height);
     commands.spawn((
         Mesh3d(meshes.add(mesh)),
         MeshMaterial3d(materials.add(StandardMaterial {
@@ -159,76 +160,147 @@ fn add_background_mesh(
     ));
 }
 
+fn polygon_to_border_mesh(polygon: &[Vec2], thickness: f32) -> Mesh {
+    if polygon.len() < 2 {
+        return Mesh::new(
+            bevy::mesh::PrimitiveTopology::TriangleList,
+            bevy::asset::RenderAssetUsages::default(),
+        );
+    }
+
+    let mut positions = Vec::new();
+    let mut indices = Vec::new();
+    let half_thickness = thickness * 0.5;
+
+    // Create thick lines by building quads for each edge
+    for i in 0..polygon.len() {
+        let next_i = (i + 1) % polygon.len();
+        let p1 = polygon[i];
+        let p2 = polygon[next_i];
+
+        // Calculate edge
+        let edge = p2 - p1;
+        let edge_length = edge.length();
+
+        // Skip degenerate edges (too short)
+        if edge_length < 0.01 {
+            continue;
+        }
+
+        // Now safe to normalize
+        let edge_normalized = edge / edge_length;
+        let perpendicular = Vec2::new(-edge_normalized.y, edge_normalized.x) * half_thickness;
+
+        // Four corners of the quad
+        let v1 = p1 + perpendicular;
+        let v2 = p1 - perpendicular;
+        let v3 = p2 - perpendicular;
+        let v4 = p2 + perpendicular;
+
+        let base = positions.len() as u32;
+
+        // Add positions (elevated above provinces)
+        positions.push([v1.x, 0.02, v1.y]);
+        positions.push([v2.x, 0.02, v2.y]);
+        positions.push([v3.x, 0.02, v3.y]);
+        positions.push([v4.x, 0.02, v4.y]);
+
+        // Two triangles for the quad
+        indices.extend_from_slice(&[base, base + 1, base + 2, base, base + 2, base + 3]);
+    }
+
+    let normals = vec![[0.0, 1.0, 0.0]; positions.len()];
+    let uvs = vec![[0.0, 0.0]; positions.len()];
+
+    let mut mesh = Mesh::new(
+        bevy::mesh::PrimitiveTopology::TriangleList,
+        bevy::asset::RenderAssetUsages::default(),
+    );
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+    mesh.insert_indices(bevy::mesh::Indices::U32(indices));
+    mesh
+}
+
 pub fn setup_map(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let province_defs = vec![
-        ProvinceDef {
-            id: 101,
-            center: Vec2::new(50.0, 50.0),
-            terrain: TerrainType::Water,
-        },
-        ProvinceDef {
-            id: 102,
-            center: Vec2::new(-50.0, 50.0),
-            terrain: TerrainType::Plains,
-        },
-        ProvinceDef {
-            id: 103,
-            center: Vec2::new(-50.0, -50.0),
-            //terrain: TerrainType::Forest,
-            terrain: TerrainType::Plains,
-        },
-        ProvinceDef {
-            id: 104,
-            center: Vec2::new(50.0, -50.0),
-            //terrain: TerrainType::Mountains,
-            terrain: TerrainType::Plains,
-        },
-        ProvinceDef {
-            id: 105,
-            center: Vec2::new(90.0, 50.0),
-            terrain: TerrainType::City,
-        },
-    ];
+    let map_data = load_map_data_from_file();
 
-    let map_width = 200.0;
-    let map_height = 200.0;
-    let map_size = Vec2::new(map_width, map_height);
+    let map_size: Vec2 = Vec2::from(map_data.map_size);
     commands.insert_resource(MapSize(map_size));
+
+    let province_defs = map_data.provinces;
 
     let provinces = generate_provinces(&province_defs, map_size);
     println!("PROVINCES GENERATED");
     let province_meshes = provinces_to_meshes(&provinces);
     println!("PROVINCE MESHES GENERATED");
 
+    let border_material = materials.add(StandardMaterial {
+        base_color: Color::srgb(0.2, 0.2, 0.2), // Dark gray
+        unlit: true,
+        cull_mode: None,
+        ..default()
+    });
+
     for (province, mesh) in provinces.into_iter().zip(province_meshes) {
         let color = province.terrain.color();
 
-        commands.spawn((
-            Mesh3d(meshes.add(mesh)),
-            MeshMaterial3d(materials.add(StandardMaterial {
-                base_color: color,
-                unlit: true,
-                cull_mode: None,
-                ..default()
-            })),
-            GameWorldEntity,
-            province,
-        ));
+        let material_handle = materials.add(StandardMaterial {
+            base_color: color,
+            unlit: true,
+            cull_mode: None,
+            ..default()
+        });
+
+        let border_mesh = polygon_to_border_mesh(&province.polygon, 2.0);
+        let province_id = province.id;
+
+        // Spawn province
+        let province_entity = commands
+            .spawn((
+                Mesh3d(meshes.add(mesh)),
+                MeshMaterial3d(material_handle),
+                GameWorldEntity,
+                province,
+            ))
+            .id();
+
+        // Spawn province border
+        commands
+            .spawn((
+                Mesh3d(meshes.add(border_mesh)),
+                MeshMaterial3d(border_material.clone()),
+                GameWorldEntity,
+                ProvinceBorder { province_id },
+            ))
+            .set_parent_in_place(province_entity);
     }
 
     println!("MAP SETUP DONE");
 
     add_background_mesh(
-        map_width,
-        map_height,
+        map_size.x,
+        map_size.y,
         10.0,
         Color::srgb_u8(0x4e, 0x62, 0x9d),
         commands,
         meshes,
         materials,
     )
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MapData {
+    pub map_size: (f32, f32),
+    pub provinces: Vec<ProvinceDef>,
+}
+
+fn load_map_data_from_file() -> MapData {
+    let file = std::fs::read_to_string("assets/data/map.ron").expect("Failed to read map.ron");
+    ron::from_str(&file).expect("Failed to parse map.ron")
 }

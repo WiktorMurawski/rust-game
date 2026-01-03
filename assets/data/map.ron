@@ -1,0 +1,30 @@
+(
+    map_size: (200.0, 200.0),
+    provinces: [
+        (
+            id: 101,
+            center: (50.0, 50.0),
+            terrain: Water,
+        ),
+        (
+            id: 102,
+            center: (-50.0, 50.0),
+            terrain: Plains,
+        ),
+        (
+            id: 103,
+            center: (-50.0, -50.0),
+            terrain: Plains,
+        ),
+        (
+            id: 104,
+            center: (50.0, -50.0),
+            terrain: Plains,
+        ),
+        (
+            id: 105,
+            center: (90.0, 50.0),
+            terrain: City,
+        ),
+    ],
+)

@@ -1,4 +1,6 @@
 use bevy::{platform::collections::HashSet, prelude::*};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Component)]
 pub struct Province {
@@ -9,16 +11,29 @@ pub struct Province {
     pub neighbors: HashSet<u32>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ProvinceDef {
     pub id: u32,
-    pub center: Vec2,
+    //pub center: Vec2,
+    pub center: (f32, f32),
     pub terrain: TerrainType,
+}
+
+#[derive(Component)]
+pub struct ProvinceBorder {
+    pub province_id: u32,
 }
 
 #[derive(Component)]
 pub struct OwnedBy(pub Entity);
 
-#[derive(Clone, Copy)]
+#[derive(Component)]
+pub struct Occupied {
+    //pub original_owner: Entity,
+    pub occupier: Entity,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum TerrainType {
     Water,
     Plains,

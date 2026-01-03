@@ -1,6 +1,7 @@
 use crate::components::province::Province;
 use crate::components::GameWorldEntity;
 use crate::plugins::map_generation::setup_map;
+use crate::plugins::ProvinceVisuals;
 use crate::states::AppState;
 use bevy::prelude::*;
 
@@ -15,7 +16,8 @@ impl Plugin for GameSystems {
             .add_systems(
                 Update,
                 print_provinces_on_p.run_if(in_state(AppState::InGame)),
-            );
+            )
+            .add_plugins(ProvinceVisuals);
     }
 }
 
@@ -33,6 +35,16 @@ fn menu_input(mut next_state: ResMut<NextState<AppState>>, keyboard: Res<ButtonI
         println!("SETTING APPSTATE TO INGAME");
     }
 }
+
+//pub fn toggle_map_mode(keyboard: Res<ButtonInput<KeyCode>>, mut map_mode: ResMut<MapMode>) {
+//    if keyboard.just_pressed(KeyCode::KeyM) {
+//        *map_mode = match *map_mode {
+//            MapMode::Terrain => MapMode::Political,
+//            MapMode::Political => MapMode::Terrain,
+//        };
+//        println!("Map mode switched to: {:?}", *map_mode);
+//    }
+//}
 
 fn print_provinces_on_p(keyboard: Res<ButtonInput<KeyCode>>, query: Query<&Province>) {
     // Only react on just-pressed (not held)
