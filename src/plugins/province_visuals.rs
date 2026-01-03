@@ -25,14 +25,20 @@ impl Plugin for ProvinceVisuals {
 }
 
 #[derive(Resource, Debug, Default, PartialEq)]
-pub enum MapMode {
+enum MapMode {
     #[default]
     Terrain,
     Political,
 }
 
-#[derive(Resource, Default)]
-pub struct BordersVisible(pub bool);
+#[derive(Resource)]
+struct BordersVisible(bool);
+
+impl Default for BordersVisible {
+    fn default() -> Self {
+        BordersVisible(true)
+    }
+}
 
 fn toggle_map_mode(keyboard: Res<ButtonInput<KeyCode>>, mut map_mode: ResMut<MapMode>) {
     if keyboard.just_pressed(KeyCode::KeyM) {

@@ -1,7 +1,7 @@
 use crate::components::province::Province;
 use crate::components::GameWorldEntity;
 use crate::plugins::map_generation::setup_map;
-use crate::plugins::ProvinceVisuals;
+use crate::plugins::{ProvinceVisuals, SelectionPlugin};
 use crate::states::AppState;
 use bevy::prelude::*;
 
@@ -17,7 +17,8 @@ impl Plugin for GameSystems {
                 Update,
                 print_provinces_on_p.run_if(in_state(AppState::InGame)),
             )
-            .add_plugins(ProvinceVisuals);
+            .add_plugins(ProvinceVisuals)
+            .add_plugins(SelectionPlugin);
     }
 }
 

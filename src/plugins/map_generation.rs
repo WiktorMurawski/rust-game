@@ -1,7 +1,8 @@
-use crate::components::province::{Province, ProvinceBorder, ProvinceDef};
+use crate::components::country::{Country, CountryDef};
+use crate::components::province::{OwnedBy, Province, ProvinceBorder, ProvinceDef};
 use crate::components::GameWorldEntity;
 use crate::resources::MapSize;
-use bevy::platform::collections::HashSet;
+use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 use earcutr::earcut;
 use serde::{Deserialize, Serialize};
@@ -229,16 +230,45 @@ pub fn setup_map(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let map_data = load_map_data_from_file();
+    let country_defs = load_countries_from_file();
 
     let map_size: Vec2 = Vec2::from(map_data.map_size);
-    commands.insert_resource(MapSize(map_size));
-
     let province_defs = map_data.provinces;
+    commands.insert_resource(MapSize(map_size));
 
     let provinces = generate_provinces(&province_defs, map_size);
     println!("PROVINCES GENERATED");
     let province_meshes = provinces_to_meshes(&provinces);
     println!("PROVINCE MESHES GENERATED");
+
+    // Spawn countries first and build a map of country_id -> Entity
+    let mut country_entities: HashMap<u32, Entity> = HashMap::new();
+    for country_def in &country_defs {
+        let country_entity = commands
+            .spawn(Country {
+                id: country_def.id,
+                name: country_def.name.clone(),
+                color: country_def.color,
+                owned_provinces: country_def.owned_provinces.clone(),
+            })
+            .id();
+
+        country_entities.insert(country_def.id, country_entity);
+        println!(
+            "Spawned country: {} (ID: {})",
+            country_def.name, country_def.id
+        );
+    }
+
+    // Build ownership map: province_id -> country_entity
+    let mut ownership_map: HashMap<u32, Entity> = HashMap::new();
+    for country_def in &country_defs {
+        if let Some(&country_entity) = country_entities.get(&country_def.id) {
+            for &province_id in &country_def.owned_provinces {
+                ownership_map.insert(province_id, country_entity);
+            }
+        }
+    }
 
     let border_material = materials.add(StandardMaterial {
         base_color: Color::srgb(0.2, 0.2, 0.2), // Dark gray
@@ -261,14 +291,22 @@ pub fn setup_map(
         let province_id = province.id;
 
         // Spawn province
-        let province_entity = commands
-            .spawn((
-                Mesh3d(meshes.add(mesh)),
-                MeshMaterial3d(material_handle),
-                GameWorldEntity,
-                province,
-            ))
-            .id();
+        let mut province_entity_commands = commands.spawn((
+            Mesh3d(meshes.add(mesh)),
+            MeshMaterial3d(material_handle),
+            GameWorldEntity,
+            province,
+        ));
+        let province_entity = province_entity_commands.id();
+
+        // Add ownership if this province is owned
+        if let Some(&owner_entity) = ownership_map.get(&province_id) {
+            province_entity_commands.insert(OwnedBy(owner_entity));
+            println!(
+                "Province {} owned by country entity {:?}",
+                province_id, owner_entity
+            );
+        }
 
         // Spawn province border
         commands
@@ -303,4 +341,10 @@ pub struct MapData {
 fn load_map_data_from_file() -> MapData {
     let file = std::fs::read_to_string("assets/data/map.ron").expect("Failed to read map.ron");
     ron::from_str(&file).expect("Failed to parse map.ron")
+}
+
+pub fn load_countries_from_file() -> Vec<CountryDef> {
+    let file =
+        std::fs::read_to_string("assets/data/countries.ron").expect("Failed to read countries.ron");
+    ron::from_str(&file).expect("Failed to parse countries.ron")
 }
