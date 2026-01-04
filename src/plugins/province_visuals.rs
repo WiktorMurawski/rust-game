@@ -183,14 +183,13 @@ fn update_border_color(
     materials: &mut ResMut<Assets<StandardMaterial>>,
 ) {
     for &child in children {
-        if let Ok(border_material) = borders.get(child) {
-            if let Some(material) = materials.get_mut(&border_material.0) {
+        if let Ok(border_material) = borders.get(child)
+            && let Some(material) = materials.get_mut(&border_material.0) {
                 material.base_color = if selected {
                     Color::srgb(1.0, 1.0, 0.0) // Yellow for selected
                 } else {
                     Color::srgb(0.2, 0.2, 0.2) // Dark gray for normal
                 };
             }
-        }
     }
 }

@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::Vec2;
 use bevy::{prelude::*, window::PrimaryWindow};
 
@@ -33,7 +34,7 @@ pub struct CurrentSelection {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SelectedEntity {
     Province(Entity),
-    Army(Entity),
+    //Army(Entity),
 }
 
 //fn print_selection(
@@ -44,6 +45,12 @@ pub enum SelectedEntity {
 //    selected_entities.iter().for_each(|e| println!("{:?}", e));
 //}
 
+#[derive(SystemParam)]
+struct WindowAndCamera<'w, 's> {
+    window: Query<'w, 's, &'static Window, With<PrimaryWindow>>,
+    camera: Query<'w, 's, (&'static Camera, &'static GlobalTransform)>,
+}
+
 fn update_selection(
     mut commands: Commands,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
@@ -52,13 +59,17 @@ fn update_selection(
     mut current_selection: ResMut<CurrentSelection>,
     selected_query: Query<Entity, With<Selected>>,
     map_size: Res<MapSize>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    camera_query: Query<(&Camera, &GlobalTransform)>,
+    window_and_camera: WindowAndCamera,
+    //window_query: Query<&Window, With<PrimaryWindow>>,
+    //camera_query: Query<(&Camera, &GlobalTransform)>,
 ) {
     if mouse_buttons.just_pressed(MouseButton::Left) {
         println!("Left mouse button pressed");
 
         let provinces = province_query;
+
+        let window_query = window_and_camera.window;
+        let camera_query = window_and_camera.camera;
 
         if let Some(mouse_pos) = mouse_to_world_coords(window_query, camera_query) {
             println!("{:?}", mouse_pos);
@@ -79,7 +90,7 @@ fn update_selection(
             });
 
             match closest {
-                Some((province_entity, province)) => {
+                Some((province_entity, _province)) => {
                     // Check if clicking the same province that's already selected
                     if current_selection.entity == Some(SelectedEntity::Province(province_entity)) {
                         println!("Already selected, doing nothing");
@@ -120,10 +131,7 @@ fn mouse_to_world_coords(
     let plane_origin = Vec3::ZERO;
     let plane_normal = Vec3::Y;
 
-    let Some(distance) = ray.intersect_plane(plane_origin, InfinitePlane3d::new(plane_normal))
-    else {
-        return None;
-    };
+    let distance = ray.intersect_plane(plane_origin, InfinitePlane3d::new(plane_normal))?;
 
     if distance <= 0.0 {
         return None;
