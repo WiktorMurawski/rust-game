@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use bevy::prelude::Vec2;
 use bevy::{prelude::*, window::PrimaryWindow};
 
+use crate::resources::MapSize;
 use crate::{components::province::Province, states::AppState};
 
 pub struct SelectionPlugin;
@@ -17,46 +18,81 @@ impl Plugin for SelectionPlugin {
     }
 }
 
-#[derive(Resource, Default)]
-struct CurrentSelection {
-    selected: Option<SelectedEntity>,
+// Marker component for selected entities
+#[derive(Component)]
+pub struct Selected;
+
+// Resource to track selection state
+#[derive(Resource, Default, Debug)]
+pub struct CurrentSelection {
+    pub entity: Option<SelectedEntity>,
+    // Or for multi-select:
+    // pub entities: Vec<Entity>,
 }
 
-enum SelectedEntity {
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SelectedEntity {
     Province(Entity),
     Army(Entity),
-    Country(Entity),
 }
 
+//fn print_selection(
+//    current_selection: Res<CurrentSelection>,
+//    selected_entities: Query<Entity, With<Selected>>,
+//) {
+//    println!("Current selection: {:?}", current_selection);
+//    selected_entities.iter().for_each(|e| println!("{:?}", e));
+//}
+
 fn update_selection(
+    mut commands: Commands,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
-    provinces: Query<&Province>,
+    //provinces: Query<&Province>,
+    province_query: Query<(Entity, &Province)>,
     mut current_selection: ResMut<CurrentSelection>,
+    selected_query: Query<Entity, With<Selected>>,
+    map_size: Res<MapSize>,
     window_query: Query<&Window, With<PrimaryWindow>>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
 ) {
     if mouse_buttons.just_pressed(MouseButton::Left) {
-        println!("Mouse button pressed");
+        println!("Left mouse button pressed");
+
+        let provinces = province_query;
+
         if let Some(mouse_pos) = mouse_to_world_coords(window_query, camera_query) {
             println!("{:?}", mouse_pos);
 
-            // Find the province whose center is closest to the mouse world position
-            let closest = provinces.iter().min_by(|a, b| {
+            if (mouse_pos.x).abs() * 2.0 > map_size.0.x || (mouse_pos.y).abs() * 2.0 > map_size.0.y
+            {
+                for entity in selected_query.iter() {
+                    commands.entity(entity).remove::<Selected>();
+                }
+                current_selection.entity = None;
+                return;
+            }
+
+            let closest = provinces.iter().min_by(|(_, a), (_, b)| {
                 squared_distance(a.center, mouse_pos)
                     .partial_cmp(&squared_distance(b.center, mouse_pos))
                     .unwrap_or(Ordering::Equal)
             });
 
             match closest {
-                Some(province) => {
-                    println!(
-                        "Closest province: id = {}, center = {:?}",
-                        province.id, province.center
-                    );
+                Some((province_entity, province)) => {
+                    // Check if clicking the same province that's already selected
+                    if current_selection.entity == Some(SelectedEntity::Province(province_entity)) {
+                        println!("Already selected, doing nothing");
+                        return;
+                    }
 
-                    //current_selection.selected = Some(SelectedEntity::Province());
-                    // → here you would normally select/highlight it, e.g.
-                    // commands.entity(province_entity).insert(Selected);
+                    for entity in selected_query.iter() {
+                        commands.entity(entity).remove::<Selected>();
+                    }
+                    current_selection.entity = None;
+
+                    commands.entity(province_entity).insert(Selected);
+                    current_selection.entity = Some(SelectedEntity::Province(province_entity));
                 }
                 None => println!("No provinces found"),
             }
@@ -77,29 +113,23 @@ fn mouse_to_world_coords(
 
     let cursor_pos = window.cursor_position()?;
 
-    // Get ray (returns Result in recent Bevy versions)
     let Ok(ray) = camera.viewport_to_world(cam_tf, cursor_pos) else {
         return None;
     };
 
-    // Plane: y = 0.0, normal = +Y (or -Y — usually +Y works)
-    // Use InfinitePlane3d (cheaper) or Plane3d if you want origin offset
     let plane_origin = Vec3::ZERO;
-    let plane_normal = Vec3::Y; // pointing "up"
+    let plane_normal = Vec3::Y;
 
-    // Returns distance along ray, or None if parallel / no intersection
     let Some(distance) = ray.intersect_plane(plane_origin, InfinitePlane3d::new(plane_normal))
     else {
         return None;
     };
 
-    // Optional: ignore hits behind the camera
     if distance <= 0.0 {
         return None;
     }
 
     let point = ray.get_point(distance);
 
-    // For y=0 plane → return (x, z)
     Some(point.xz())
 }

@@ -1,5 +1,6 @@
 use crate::components::country::*;
 use crate::components::province::*;
+use crate::plugins::selection::Selected;
 use crate::states::AppState;
 use bevy::prelude::*;
 
@@ -17,7 +18,7 @@ impl Plugin for ProvinceVisuals {
                     update_province_colors,
                     update_changed_province_colors,
                     update_border_visibility,
-                    //update_selected_province_borders,
+                    update_selected_province_borders,
                 )
                     .run_if(in_state(AppState::InGame)),
             );
@@ -151,23 +152,45 @@ fn update_border_visibility(
     }
 }
 
-//fn update_selected_province_borders(
-//    provinces: Query<(&Children, Option<&Selected>), (With<Province>, Changed<Selected>)>,
-//    mut borders: Query<&MeshMaterial3d<StandardMaterial>, With<ProvinceBorder>>,
-//    mut materials: ResMut<Assets<StandardMaterial>>,
-//) {
-//    for (children, selected) in provinces.iter() {
-//        // Find the border child
-//        for &child in children.iter() {
-//            if let Ok(border_material) = borders.get(child) {
-//                if let Some(material) = materials.get_mut(&border_material.0) {
-//                    material.base_color = if selected.is_some() {
-//                        Color::srgb(1.0, 1.0, 0.0) // Yellow for selected
-//                    } else {
-//                        Color::srgb(0.2, 0.2, 0.2) // Dark gray for normal
-//                    };
-//                }
-//            }
-//        }
-//    }
-//}
+fn update_selected_province_borders(
+    // Provinces that just got Selected added
+    newly_selected: Query<&Children, (With<Province>, Added<Selected>)>,
+    // Provinces that exist and might be selected
+    all_provinces: Query<(&Children, Has<Selected>), With<Province>>,
+    mut removed: RemovedComponents<Selected>,
+    borders: Query<&MeshMaterial3d<StandardMaterial>, With<ProvinceBorder>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    // Handle newly selected provinces
+    for children in newly_selected.iter() {
+        update_border_color(children, true, &borders, &mut materials);
+    }
+
+    // Handle deselected provinces
+    for entity in removed.read() {
+        // Entity might have been despawned, so check if it still exists
+        if let Ok((children, _)) = all_provinces.get(entity) {
+            update_border_color(children, false, &borders, &mut materials);
+        }
+    }
+}
+
+// Helper function to reduce duplication
+fn update_border_color(
+    children: &Children,
+    selected: bool,
+    borders: &Query<&MeshMaterial3d<StandardMaterial>, With<ProvinceBorder>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+) {
+    for &child in children {
+        if let Ok(border_material) = borders.get(child) {
+            if let Some(material) = materials.get_mut(&border_material.0) {
+                material.base_color = if selected {
+                    Color::srgb(1.0, 1.0, 0.0) // Yellow for selected
+                } else {
+                    Color::srgb(0.2, 0.2, 0.2) // Dark gray for normal
+                };
+            }
+        }
+    }
+}

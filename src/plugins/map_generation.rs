@@ -171,7 +171,6 @@ fn polygon_to_border_mesh(polygon: &[Vec2], thickness: f32) -> Mesh {
 
     let mut positions = Vec::new();
     let mut indices = Vec::new();
-    let half_thickness = thickness * 0.5;
 
     // Create thick lines by building quads for each edge
     for i in 0..polygon.len() {
@@ -190,13 +189,15 @@ fn polygon_to_border_mesh(polygon: &[Vec2], thickness: f32) -> Mesh {
 
         // Now safe to normalize
         let edge_normalized = edge / edge_length;
-        let perpendicular = Vec2::new(-edge_normalized.y, edge_normalized.x) * half_thickness;
+        // Perpendicular pointing inward (we'll use negative to go inward)
+        let perpendicular = Vec2::new(-edge_normalized.y, edge_normalized.x);
 
-        // Four corners of the quad
-        let v1 = p1 + perpendicular;
-        let v2 = p1 - perpendicular;
-        let v3 = p2 - perpendicular;
-        let v4 = p2 + perpendicular;
+        // Four corners of the quad - border entirely on the INSIDE of the polygon
+        // This prevents overlapping with neighbor borders
+        let v1 = p1; // Edge point
+        let v2 = p1 - perpendicular * thickness; // Inward from edge
+        let v3 = p2 - perpendicular * thickness; // Inward from edge
+        let v4 = p2; // Edge point
 
         let base = positions.len() as u32;
 
@@ -270,13 +271,6 @@ pub fn setup_map(
         }
     }
 
-    let border_material = materials.add(StandardMaterial {
-        base_color: Color::srgb(0.2, 0.2, 0.2), // Dark gray
-        unlit: true,
-        cull_mode: None,
-        ..default()
-    });
-
     for (province, mesh) in provinces.into_iter().zip(province_meshes) {
         let color = province.terrain.color();
 
@@ -309,6 +303,12 @@ pub fn setup_map(
         }
 
         // Spawn province border
+        let border_material = materials.add(StandardMaterial {
+            base_color: Color::srgb(0.2, 0.2, 0.2), // Dark gray
+            unlit: true,
+            cull_mode: None,
+            ..default()
+        });
         commands
             .spawn((
                 Mesh3d(meshes.add(border_mesh)),
