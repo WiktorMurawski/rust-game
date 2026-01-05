@@ -1,14 +1,17 @@
 mod camera_controls;
 mod game_systems;
+mod lighting;
 mod main_menu_ui;
 mod map_generation;
 mod province_info_ui;
 mod province_visuals;
 mod selection;
 mod setup_egui_camera;
+mod terrain_visual_3d;
 
 pub use camera_controls::GameCamera;
 pub use game_systems::GameSystems;
+pub use lighting::Lighting;
 pub use main_menu_ui::MainMenu;
 pub use map_generation::setup_map;
 pub use province_info_ui::ProvinceInfoUI;

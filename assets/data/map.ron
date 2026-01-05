@@ -9,12 +9,12 @@
         (
             id: 102,
             center: (-50.0, 50.0),
-            terrain: Plains,
+            terrain: Mountains,
         ),
         (
             id: 103,
             center: (-50.0, -50.0),
-            terrain: Plains,
+            terrain: Forest,
         ),
         (
             id: 104,

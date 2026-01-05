@@ -71,10 +71,6 @@ fn polygon_to_mesh(polygon: &[Vec2]) -> Mesh {
     mesh
 }
 
-//fn polygons_to_meshes(polygons: &[Vec<Vec2>]) -> Vec<Mesh> {
-//    polygons.iter().map(|p| polygon_to_mesh(p)).collect()
-//}
-
 pub fn provinces_to_meshes(provinces: &[Province]) -> Vec<Mesh> {
     provinces
         .iter()
@@ -276,8 +272,9 @@ pub fn setup_map(
 
         let material_handle = materials.add(StandardMaterial {
             base_color: color,
-            unlit: true,
+            //unlit: true,
             cull_mode: None,
+            perceptual_roughness: 0.8,
             ..default()
         });
 

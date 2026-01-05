@@ -1,9 +1,11 @@
 use crate::components::GameWorldEntity;
-use crate::plugins::map_generation::setup_map;
 use crate::plugins::*;
 use crate::states::AppState;
 use bevy::ecs::query::QueryFilter;
 use bevy::prelude::*;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct MapSetup;
 
 pub struct GameSystems;
 
@@ -12,9 +14,17 @@ impl Plugin for GameSystems {
         app.init_state::<AppState>()
             .add_systems(Startup, setup)
             .add_systems(OnExit(AppState::InMainMenu), clear_cameras)
-            .add_systems(OnEnter(AppState::InGame), setup_map)
+            .add_systems(
+                OnEnter(AppState::InGame),
+                map_generation::setup_map.in_set(MapSetup),
+            )
+            .add_systems(
+                OnEnter(AppState::InGame),
+                terrain_visual_3d::spawn_3d_objects.after(MapSetup),
+            )
             .add_systems(OnExit(AppState::InGame), clear_game_entities)
             .add_plugins(GameCamera)
+            .add_plugins(Lighting)
             .add_plugins(ProvinceVisuals)
             .add_plugins(SelectionPlugin)
             .add_plugins(MainMenu)

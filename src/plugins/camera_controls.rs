@@ -38,7 +38,7 @@ fn camera_keyboard_controls(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut camera_q: Query<&mut Transform, With<Camera3d>>,
     time: Res<Time>,
-    map_size: Res<MapSize>,
+    _map_size: Res<MapSize>,
 ) {
     let Ok(mut camera) = camera_q.single_mut() else {
         return;
@@ -70,11 +70,11 @@ fn camera_keyboard_controls(
         camera.translation -= right_xz * speed;
     }
 
-    camera.translation.x = camera
-        .translation
-        .x
-        .clamp(-400.0 - map_size.0.x, map_size.0.x - 400.0);
-    camera.translation.z = camera.translation.z.clamp(-map_size.0.y, map_size.0.y);
+    //camera.translation.x = camera
+    //    .translation
+    //    .x
+    //    .clamp(-400.0 - map_size.0.x, map_size.0.x - 400.0);
+    //camera.translation.z = camera.translation.z.clamp(-map_size.0.y, map_size.0.y);
 }
 
 fn camera_scroll_controls(
@@ -85,11 +85,11 @@ fn camera_scroll_controls(
         return;
     };
 
-    const SENS: f32 = 30.0;
+    const SENS: f32 = 15.0;
     const MIN_Y: f32 = 100.0;
-    const MAX_Y: f32 = 800.0;
+    const MAX_Y: f32 = 600.0;
     const MIN_ANGLE: f32 = 20.0;
-    const MAX_ANGLE: f32 = 60.0;
+    const MAX_ANGLE: f32 = 70.0;
     for event in scroll_events.read() {
         let zoom_amount = event.y * SENS;
 
