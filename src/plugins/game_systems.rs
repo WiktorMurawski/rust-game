@@ -1,6 +1,6 @@
 use crate::components::GameWorldEntity;
 use crate::plugins::map_generation::setup_map;
-use crate::plugins::{GameCamera, MainMenu, ProvinceVisuals, SelectionPlugin};
+use crate::plugins::*;
 use crate::states::AppState;
 use bevy::ecs::query::QueryFilter;
 use bevy::prelude::*;
@@ -17,7 +17,9 @@ impl Plugin for GameSystems {
             .add_plugins(GameCamera)
             .add_plugins(ProvinceVisuals)
             .add_plugins(SelectionPlugin)
-            .add_plugins(MainMenu);
+            .add_plugins(MainMenu)
+            .add_plugins(SetupEguiCamera)
+            .add_plugins(ProvinceInfoUI);
     }
 }
 

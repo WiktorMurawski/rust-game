@@ -4,11 +4,15 @@ use crate::states::AppState;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 
+// In your camera plugin:
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct CameraSetup;
+
 pub struct GameCamera;
 
 impl Plugin for GameCamera {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::InGame), setup_camera)
+        app.add_systems(OnEnter(AppState::InGame), setup_camera.in_set(CameraSetup))
             .insert_resource(ClearColor(Color::srgb_u8(69, 199, 255)))
             .add_systems(
                 Update,

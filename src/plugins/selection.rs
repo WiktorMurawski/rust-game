@@ -72,8 +72,6 @@ fn update_selection(
         let camera_query = window_and_camera.camera;
 
         if let Some(mouse_pos) = mouse_to_world_coords(window_query, camera_query) {
-            println!("{:?}", mouse_pos);
-
             if (mouse_pos.x).abs() * 2.0 > map_size.0.x || (mouse_pos.y).abs() * 2.0 > map_size.0.y
             {
                 for entity in selected_query.iter() {
@@ -89,23 +87,18 @@ fn update_selection(
                     .unwrap_or(Ordering::Equal)
             });
 
-            match closest {
-                Some((province_entity, _province)) => {
-                    // Check if clicking the same province that's already selected
-                    if current_selection.entity == Some(SelectedEntity::Province(province_entity)) {
-                        println!("Already selected, doing nothing");
-                        return;
-                    }
-
-                    for entity in selected_query.iter() {
-                        commands.entity(entity).remove::<Selected>();
-                    }
-                    current_selection.entity = None;
-
-                    commands.entity(province_entity).insert(Selected);
-                    current_selection.entity = Some(SelectedEntity::Province(province_entity));
+            if let Some((province_entity, _province)) = closest {
+                if current_selection.entity == Some(SelectedEntity::Province(province_entity)) {
+                    return;
                 }
-                None => println!("No provinces found"),
+
+                for entity in selected_query.iter() {
+                    commands.entity(entity).remove::<Selected>();
+                }
+                current_selection.entity = None;
+
+                commands.entity(province_entity).insert(Selected);
+                current_selection.entity = Some(SelectedEntity::Province(province_entity));
             }
         }
     }
