@@ -3,6 +3,7 @@ use crate::resources::MapSize;
 use crate::states::AppState;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
+use bevy::ui_render::stack_z_offsets::BACKGROUND_COLOR;
 
 // In your camera plugin:
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
@@ -13,13 +14,18 @@ pub struct GameCamera;
 impl Plugin for GameCamera {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::InGame), setup_camera.in_set(CameraSetup))
-            .insert_resource(ClearColor(Color::srgb_u8(69, 199, 255)))
+            .add_systems(OnEnter(AppState::InGame), change_background_color)
             .add_systems(
                 Update,
                 (camera_keyboard_controls, camera_scroll_controls)
                     .run_if(in_state(AppState::InGame)),
             );
     }
+}
+
+fn change_background_color(mut clear_color: ResMut<ClearColor>,) {
+    const BACKGROUND_COLOR: Color = Color::srgb_u8(69, 199, 255);
+    clear_color.0 = BACKGROUND_COLOR;
 }
 
 fn setup_camera(mut commands: Commands) {

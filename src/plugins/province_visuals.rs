@@ -4,9 +4,9 @@ use crate::plugins::selection::Selected;
 use crate::states::AppState;
 use bevy::prelude::*;
 
-pub struct ProvinceVisuals;
+pub struct ProvinceVisualsPlugin;
 
-impl Plugin for ProvinceVisuals {
+impl Plugin for ProvinceVisualsPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MapMode>()
             .init_resource::<BordersVisible>()

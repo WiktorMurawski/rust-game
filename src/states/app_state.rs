@@ -4,5 +4,8 @@ use bevy::prelude::States;
 pub enum AppState {
     #[default]
     InMainMenu,
+    LoadingNewGame,
+    LoadingSavedGame,
+    CountrySelection,
     InGame,
 }

@@ -64,7 +64,7 @@ fn update_selection(
     //camera_query: Query<(&Camera, &GlobalTransform)>,
 ) {
     if mouse_buttons.just_pressed(MouseButton::Left) {
-        println!("Left mouse button pressed");
+        // println!("LMB pressed");
 
         let provinces = province_query;
 
