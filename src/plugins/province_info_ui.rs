@@ -5,7 +5,7 @@ use crate::plugins::selection::{CurrentSelection, Selected};
 use crate::states::AppState;
 use bevy::app::Plugin;
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 pub struct ProvinceInfoUI;
 
@@ -39,6 +39,7 @@ fn province_info_ui(
                 if let Ok((province, owner)) = provinces.get(entity) {
                     ui.label(format!("ID: {}", province.id));
                     ui.label(format!("Terrain: {:?}", province.terrain));
+                    ui.label(format!("Center: {:#}", province.center));
 
                     if let Some(owner) = owner {
                         if let Ok(country) = countries.get(owner.0) {

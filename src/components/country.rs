@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Component)]
+#[derive(Debug, Component)]
 pub struct Country {
     pub id: u32,
     pub name: String,

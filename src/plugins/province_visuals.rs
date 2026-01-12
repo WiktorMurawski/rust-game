@@ -1,3 +1,4 @@
+use std::cmp::PartialEq;
 use crate::components::country::*;
 use crate::components::province::*;
 use crate::plugins::selection::Selected;
@@ -28,8 +29,8 @@ impl Plugin for ProvinceVisualsPlugin {
 #[derive(Resource, Debug, Default, PartialEq)]
 enum MapMode {
     #[default]
-    Terrain,
     Political,
+    Terrain,
 }
 
 #[derive(Resource)]
@@ -80,10 +81,10 @@ fn update_province_colors(
                     if let Ok(country) = countries.get(owner.0) {
                         country.color
                     } else {
-                        Color::srgb(0.5, 0.5, 0.5) // Unowned/neutral
+                        Color::srgb(0.0, 0.0, 1.0)
                     }
                 } else {
-                    Color::srgb(0.5, 0.5, 0.5)
+                    Color::srgb(0.0, 0.0, 1.0)
                 }
             }
         };
@@ -104,6 +105,12 @@ fn update_changed_province_colors(
             continue;
         };
 
+        if province.terrain == TerrainType::Water{
+            let color = province.terrain.color();
+            material.base_color = color;
+            continue;
+        }
+
         let color = match *map_mode {
             MapMode::Terrain => province.terrain.color(),
             MapMode::Political => {
@@ -111,10 +118,10 @@ fn update_changed_province_colors(
                     if let Ok(country) = countries.get(owner.0) {
                         country.color
                     } else {
-                        Color::srgb(0.5, 0.5, 0.5)
+                        Color::srgb(0.0, 0.0, 1.0)
                     }
                 } else {
-                    Color::srgb(0.5, 0.5, 0.5)
+                    Color::srgb(0.0, 0.0, 1.0)
                 }
             }
         };
@@ -184,12 +191,13 @@ fn update_border_color(
 ) {
     for &child in children {
         if let Ok(border_material) = borders.get(child)
-            && let Some(material) = materials.get_mut(&border_material.0) {
-                material.base_color = if selected {
-                    Color::srgb(1.0, 1.0, 0.0) // Yellow for selected
-                } else {
-                    Color::srgb(0.2, 0.2, 0.2) // Dark gray for normal
-                };
-            }
+            && let Some(material) = materials.get_mut(&border_material.0)
+        {
+            material.base_color = if selected {
+                Color::srgb(1.0, 1.0, 0.0) // Yellow for selected
+            } else {
+                Color::srgb(0.2, 0.2, 0.2) // Dark gray for normal
+            };
+        }
     }
 }

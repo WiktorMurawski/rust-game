@@ -1,12 +1,12 @@
 // plugins/map_generation.rs
-use bevy::prelude::*;
-use bevy::platform::collections::{HashMap, HashSet};
-use crate::components::province::*;
 use crate::components::GameWorldEntity;
+use crate::components::province::*;
 use crate::resources::MapSize;
 use crate::states::AppState;
-use voronoice::{Point, Voronoi};
+use bevy::platform::collections::{HashMap, HashSet};
+use bevy::prelude::*;
 use earcutr::earcut;
+use voronoice::{Point, Voronoi};
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MapGenerated;
@@ -17,8 +17,14 @@ impl Plugin for MapGenerationPlugin {
     fn build(&self, app: &mut App) {
         app
             // Load map geometry for both new and saved games
-            .add_systems(OnEnter(AppState::LoadingNewGame), load_map_geometry.in_set(MapGenerated))
-            .add_systems(OnEnter(AppState::LoadingSavedGame), load_map_geometry.in_set(MapGenerated));
+            .add_systems(
+                OnEnter(AppState::LoadingNewGame),
+                load_map_geometry.in_set(MapGenerated),
+            )
+            .add_systems(
+                OnEnter(AppState::LoadingSavedGame),
+                load_map_geometry.in_set(MapGenerated),
+            );
     }
 }
 
@@ -54,12 +60,14 @@ fn load_map_geometry(
 
         let border_mesh = polygon_to_border_mesh(&province.polygon, 2.0);
 
-        let province_entity = commands.spawn((
-            Mesh3d(meshes.add(mesh)),
-            MeshMaterial3d(material_handle),
-            GameWorldEntity,
-            province,
-        )).id();
+        let province_entity = commands
+            .spawn((
+                Mesh3d(meshes.add(mesh)),
+                MeshMaterial3d(material_handle),
+                GameWorldEntity,
+                province,
+            ))
+            .id();
 
         province_entities.insert(province_id, province_entity);
 
@@ -70,12 +78,14 @@ fn load_map_geometry(
             ..default()
         });
 
-        commands.spawn((
-            Mesh3d(meshes.add(border_mesh)),
-            MeshMaterial3d(border_material),
-            GameWorldEntity,
-            ProvinceBorder { province_id },
-        )).set_parent_in_place(province_entity);
+        commands
+            .spawn((
+                Mesh3d(meshes.add(border_mesh)),
+                MeshMaterial3d(border_material),
+                GameWorldEntity,
+                ProvinceBorder { province_id },
+            ))
+            .set_parent_in_place(province_entity);
     }
 
     commands.insert_resource(ProvinceEntityMap(province_entities));
@@ -98,8 +108,8 @@ fn generate_provinces(province_defs: &[ProvinceDef], map_size: Vec2) -> Vec<Prov
         .map(|p| Vec2::new(p.center.0, p.center.1))
         .collect();
 
-    let voronoi_diagram = build_voronoi(&province_centers, map_size)
-        .expect("Failed to build voronoi");
+    let voronoi_diagram =
+        build_voronoi(&province_centers, map_size).expect("Failed to build voronoi");
     let polygons = extract_polygons(&voronoi_diagram);
     let cell_neighbors = calculate_neighbors(&voronoi_diagram);
 
@@ -134,12 +144,14 @@ fn build_voronoi(centers: &[Vec2], map_size: Vec2) -> Option<voronoice::Voronoi>
         println!("{:?}", s);
     }
 
+    let padding = 1.01;
+
     voronoice::VoronoiBuilder::default()
         .set_sites(sites)
         .set_bounding_box(voronoice::BoundingBox::new(
             Point { x: 0.0, y: 0.0 },
-            map_size.x as f64,
-            map_size.y as f64,
+            (map_size.x * padding) as f64,
+            (map_size.y * padding) as f64,
         ))
         .build()
 }

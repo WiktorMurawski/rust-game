@@ -3,7 +3,6 @@ use crate::resources::MapSize;
 use crate::states::AppState;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
-use bevy::ui_render::stack_z_offsets::BACKGROUND_COLOR;
 
 // In your camera plugin:
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
@@ -23,14 +22,14 @@ impl Plugin for GameCamera {
     }
 }
 
-fn change_background_color(mut clear_color: ResMut<ClearColor>,) {
+fn change_background_color(mut clear_color: ResMut<ClearColor>) {
     const BACKGROUND_COLOR: Color = Color::srgb_u8(69, 199, 255);
     clear_color.0 = BACKGROUND_COLOR;
 }
 
 fn setup_camera(mut commands: Commands) {
     let mut transform =
-        Transform::from_xyz(0.0, 300.0, -400.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y);
+        Transform::from_xyz(0.0, 150.0, -200.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y);
 
     transform.rotate_around(
         Vec3::new(0.0, 0.0, 0.0),
@@ -92,8 +91,8 @@ fn camera_scroll_controls(
     };
 
     const SENS: f32 = 15.0;
-    const MIN_Y: f32 = 100.0;
-    const MAX_Y: f32 = 600.0;
+    const MIN_Y: f32 = 50.0;
+    const MAX_Y: f32 = 500.0;
     const MIN_ANGLE: f32 = 20.0;
     const MAX_ANGLE: f32 = 70.0;
     for event in scroll_events.read() {

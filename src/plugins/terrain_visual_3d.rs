@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::components::province::Province;
 
-const SCALE: f32 = 10.0;
+const SCALE: f32 = 5.0;
 
 pub fn spawn_3d_objects(
     mut commands: Commands,
@@ -52,8 +52,9 @@ fn spawn_city(
 
     let child = commands
         .spawn((
-            //Mesh3d(meshes.add(Cuboid::new(1.0, 2.0, 1.0))),
-            Mesh3d(meshes.add(Extrusion::new(Annulus::new(0.5, 0.8), 0.5))),
+            // Mesh3d(meshes.add(Cuboid::new(1.0, 2.0, 1.0))),
+            // Mesh3d(meshes.add(Extrusion::new(Annulus::new(0.5, 0.8), 0.5))),
+            Mesh3d(meshes.add(Extrusion::new(Circle::new(0.8), 0.5))),
             MeshMaterial3d(materials.add(StandardMaterial {
                 base_color: Color::srgb_u8(70, 50, 40),
                 cull_mode: None,

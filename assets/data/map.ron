@@ -1,30 +1,503 @@
 (
-    map_size: (200.0, 200.0),
+    map_size: (600.0, 600.0),
     provinces: [
+        //(
+        //    id: 1001,
+        //    center: (-250.0, -250.0),
+        //    terrain: Water,
+        //),
         (
-            id: 101,
-            center: (50.0, 50.0),
+            id: 1002,
+            center: (-250.0, -200.0),
             terrain: Water,
         ),
         (
-            id: 102,
-            center: (-50.0, 50.0),
+            id: 1003,
+            center: (-250.0, -150.0),
+            terrain: Water,
+        ),
+        //(
+        //    id: 1004,
+        //    center: (-250.0, -100.0),
+        //    terrain: Water,
+        //),
+        //(
+        //    id: 1005,
+        //    center: (-250.0, -50.0),
+        //    terrain: Water,
+        //),
+        //(
+        //   id: 1006,
+        //    center: (-250.0, 0.0),
+        //    terrain: Water,
+        //),
+        (
+            id: 1007,
+            center: (-250.0, 10.0),
+            terrain: Water,
+        ),
+        (
+            id: 1008,
+            center: (-250.0, 100.0),
+            terrain: Water,
+        ),
+        (
+            id: 1009,
+            center: (-250.0, 150.0),
+            terrain: Water,
+        ),
+        (
+            id: 1010,
+            center: (-250.0, 200.0),
+            terrain: Water,
+        ),
+        //(
+        //    id: 1011,
+        //    center: (-250.0, 250.0),
+        //    terrain: Water,
+        //),
+        (
+            id: 1012,
+            center: (-200.0, 250.0),
+            terrain: Water,
+        ),
+        (
+            id: 1013,
+            center: (-150.0, 250.0),
+            terrain: Water,
+        ),
+        //(
+        //    id: 1014,
+        //    center: (-100.0, 250.0),
+        //    terrain: Water,
+        //),
+        (
+            id: 1015,
+            center: (-50.0, 250.0),
+            terrain: Water,
+        ),
+        //(
+        //    id: 1016,
+        //    center: (0.0, 250.0),
+        //    terrain: Water,
+        //),
+        (
+            id: 1017,
+            center: (50.0, 250.0),
+            terrain: Water,
+        ),
+        //(
+        //    id: 1018,
+        //    center: (100.0, 250.0),
+        //    terrain: Water,
+        //),
+        (
+            id: 1019,
+            center: (140.0, 150.0),
+            terrain: Water,
+        ),
+        (
+            id: 1020,
+            center: (200.0, 250.0),
+            terrain: Water,
+        ),
+        //(
+        //    id: 1021,
+        //    center: (250.0, 250.0),
+        //    terrain: Water,
+        //),
+        (
+            id: 1022,
+            center: (250.0, 200.0),
+            terrain: Water,
+        ),
+        (
+            id: 1023,
+            center: (250.0, 150.0),
+            terrain: Water,
+        ),
+        (
+            id: 1024,
+            center: (250.0, 60.0),
+            terrain: Water,
+        ),
+        //(
+        //    id: 1025,
+        //    center: (250.0, 50.0),
+        //    terrain: Water,
+        //),
+        //(
+        //    id: 1026,
+        //    center: (250.0, 0.0),
+        //    terrain: Water,
+        //),
+        //(
+        //    id: 1027,
+        //    center: (250.0, -50.0),
+        //    terrain: Water,
+        //),
+        (
+            id: 1028,
+            center: (250.0, -60.0),
+            terrain: Water,
+        ),
+        (
+            id: 1029,
+            center: (250.0, -150.0),
+            terrain: Water,
+        ),
+        //(
+        //    id: 1030,
+        //    center: (250.0, -200.0),
+        //    terrain: Water,
+        //),
+        //(
+        //    id: 1031,
+        //    center: (250.0, -250.0),
+        //    terrain: Water,
+        //),
+        //(
+        //    id: 1032,
+        //    center: (200.0, -250.0),
+        //    terrain: Water,
+        //),
+        (
+            id: 1033,
+            center: (150.0, -250.0),
+            terrain: Water,
+        ),
+        (
+            id: 1034,
+            center: (100.0, -230.0),
+            terrain: Water,
+        ),
+        //(
+        //    id: 1035,
+        //    center: (50.0, -250.0),
+        //    terrain: Water,
+        //),
+        (
+            id: 1036,
+            center: (0.0, -280.0),
+            terrain: Water,
+        ),
+        (
+            id: 1037,
+            center: (-50.0, -250.0),
+            terrain: Water,
+        ),
+        //(
+        //    id: 1038,
+        //    center: (-100.0, -250.0),
+        //    terrain: Water,
+        //),
+        //(
+        //    id: 1039,
+        //    center: (-150.0, -255.0),
+        //    terrain: Water,
+        //),
+        (
+            id: 1040,
+            center: (-200.0, -270.0),
+            terrain: Water,
+        ),
+
+        (
+            id: 201,
+            center: (-111.0, -152.0),
+            terrain: Plains,
+        ),
+        (
+            id: 202,
+            center: (-77.0, -160.0),
+            terrain: Plains,
+        ),
+        (
+            id: 203,
+            center: (23.0, -119.0),
+            terrain: Plains,
+        ),
+        (
+            id: 204,
+            center: (-16.0, -62.0),
+            terrain: Plains,
+        ),
+
+        (
+            id: 401,
+            center: (-89.0, -4.0),
             terrain: Mountains,
         ),
         (
+            id: 402,
+            center: (-126.0, 12.0),
+            terrain: City,
+        ),
+        (
+            id: 403,
+            center: (-142.0, -22.0),
+            terrain: Plains,
+        ),
+
+        (
+            id: 1041,
+            center: (-108.0, -40.0),
+            terrain: Water,
+        ),
+        (
+            id: 1042,
+            center: (-69.0, -45.0),
+            terrain: Water,
+        ),
+        (
+            id: 1043,
+            center: (-44.0, -26.0),
+            terrain: Water,
+        ),
+        (
+            id: 1044,
+            center: (-137.0, -76.0),
+            terrain: Water,
+        ),
+        (
+            id: 1045,
+            center: (3.0, -42.0),
+            terrain: Water,
+        ),
+        (
+            id: 1046,
+            center: (24.0, -44.0),
+            terrain: Water,
+        ),
+        (
+            id: 1047,
+            center: (45.0, -53.0),
+            terrain: Water,
+        ),
+        (
+            id: 1048,
+            center: (66.0, -76.0),
+            terrain: Water,
+        ),
+        (
+            id: 1049,
+            center: (75.0, 78.0),
+            terrain: Water,
+        ),
+        (
+            id: 1050,
+            center: (96.0, -63.0),
+            terrain: Water,
+        ),
+        (
+            id: 1051,
+            center: (133.0, -79.0),
+            terrain: Water,
+        ),
+        (
+            id: 1052,
+            center: (178.0, 46.0),
+            terrain: Water,
+        ),
+        (
+            id: 1053,
+            center: (47.0, 110.0),
+            terrain: Water,
+        ),
+        (
+            id: 1054,
+            center: (-25.0, 159.0),
+            terrain: Water,
+        ),
+        (
+            id: 1055,
+            center: (-60.0, 161.0),
+            terrain: Water,
+        ),
+        (
+            id: 1056,
+            center: (-112.0, 223.0),
+            terrain: Water,
+        ),
+
+
+
+        (
+            id: 101,
+            center: (-95.0, -99.0),
+            terrain: City,
+        ),
+        (
+            id: 102,
+            center: (-47.0, -102.0),
+            terrain: Forest,
+        ),
+        (
             id: 103,
-            center: (-50.0, -50.0),
+            center: (-13.0, -106.0),
             terrain: Forest,
         ),
         (
             id: 104,
-            center: (50.0, -50.0),
-            terrain: Plains,
+            center: (-41.0, -159.0),
+            terrain: Forest,
         ),
         (
             id: 105,
-            center: (90.0, 50.0),
+            center: (-208.0, -19.0),
+            terrain: Plains,
+        ),
+        (
+            id: 106,
+            center: (-204.0, 34.0),
+            terrain: Plains,
+        ),
+        (
+            id: 107,
+            center: (-194.0, 72.0),
+            terrain: Plains,
+        ),
+        (
+            id: 108,
+            center: (-200.0, 109.0),
+            terrain: Plains,
+        ),
+        (
+            id: 109,
+            center: (-190.0, 141.0),
+            terrain: Plains,
+        ),
+        (
+            id: 110,
+            center: (-160.0, 10.0),
+            terrain: Plains,
+        ),
+        (
+            id: 111,
+            center: (-165.0, 41.0),
+            terrain: Forest,
+        ),
+        (
+            id: 112,
+            center: (-153.0, 78.0),
+            terrain: Forest,
+        ),
+        (
+            id: 113,
+            center: (-161.0, 118.0),
             terrain: City,
         ),
+        (
+            id: 114,
+            center: (-132.0, 129.0),
+            terrain: Plains,
+        ),
+        (
+            id: 115,
+            center: (-121.0, 87.0),
+            terrain: Forest,
+        ),
+        (
+            id: 116,
+            center: (-114.0, 45.0),
+            terrain: Plains,
+        ),
+        (
+            id: 117,
+            center: (-79.0, 40.0),
+            terrain: Forest,
+        ),
+        (
+            id: 118,
+            center: (-66.0, 40.0),
+            terrain: Plains,
+        ),
+        (
+            id: 119,
+            center: (-64.0, 82.0),
+            terrain: Plains,
+        ),
+        (
+            id: 120,
+            center: (-97.0, 116.0),
+            terrain: Forest,
+        ),
+        (
+            id: 121,
+            center: (-10.0, 35.0),
+            terrain: Mountains,
+        ),
+        (
+            id: 122,
+            center: (5.0, 74.0),
+            terrain: Mountains,
+        ),
+
+        (
+            id: 301,
+            center: (39.0, 39.0),
+            terrain: City,
+        ),
+        (
+            id: 302,
+            center: (16.0, -18.0),
+            terrain: Mountains,
+        ),
+        (
+            id: 303,
+            center: (46.0, -8.0),
+            terrain: Plains,
+        ),
+        (
+            id: 304,
+            center: (79.0, 25.0),
+            terrain: Forest,
+        ),
+        (
+            id: 305,
+            center: (124.0, 46.0),
+            terrain: Plains,
+        ),
+        (
+            id: 306,
+            center: (115.0, -9.0),
+            terrain: Mountains,
+        ),
+        (
+            id: 307,
+            center: (81.0, -40.0),
+            terrain: Mountains,
+        ),
+        (
+            id: 308,
+            center: (117.0, -42.0),
+            terrain: Plains,
+        ),
+        (
+            id: 309,
+            center: (192.0, 9.0),
+            terrain: Plains,
+        ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ],
 )

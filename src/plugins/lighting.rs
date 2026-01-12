@@ -3,15 +3,18 @@ use bevy::{
     prelude::*,
 };
 
+use crate::plugins::map_generation::MapGenerated;
 use crate::resources::MapSize;
 use crate::states::AppState;
-use crate::plugins::map_generation::MapGenerated;
 
 pub struct Lighting;
 
 impl Plugin for Lighting {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::InGame), setup_lighting.after(MapGenerated));
+        app.add_systems(
+            OnEnter(AppState::InGame),
+            setup_lighting.after(MapGenerated),
+        );
     }
 }
 
@@ -39,7 +42,7 @@ fn setup_lighting(mut commands: Commands, map_size: Res<MapSize>) {
 
     commands.insert_resource(AmbientLight {
         color: Color::srgb(0.6, 0.7, 0.9),
-        brightness: 300.0,
+        brightness: 500.0,
         ..default()
     });
 

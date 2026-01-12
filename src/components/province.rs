@@ -33,7 +33,7 @@ pub struct Occupied {
     pub occupier: Entity,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum TerrainType {
     Water,
     Plains,

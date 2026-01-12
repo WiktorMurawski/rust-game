@@ -1,25 +1,27 @@
 // plugins/save_load.rs
-use bevy::prelude::*;
-use bevy::platform::collections::HashMap;
-use serde::{Deserialize, Serialize};
 use crate::components::country::*;
 use crate::components::province::*;
 use crate::plugins::map_generation::{MapGenerated, ProvinceEntityMap};
 use crate::states::AppState;
 use anyhow::{Context, Result};
+use bevy::platform::collections::HashMap;
+use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 pub struct SaveLoadPlugin;
 
 impl Plugin for SaveLoadPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .init_resource::<SaveLoadError>()
-            .add_systems(OnEnter(AppState::LoadingNewGame),
-                         initialize_new_game.after(MapGenerated))
-            .add_systems(OnEnter(AppState::LoadingSavedGame),
-                         load_saved_game.after(MapGenerated))
-            .add_systems(Update,
-                         save_game_on_key.run_if(in_state(AppState::InGame)));
+        app.init_resource::<SaveLoadError>()
+            .add_systems(
+                OnEnter(AppState::LoadingNewGame),
+                initialize_new_game.after(MapGenerated),
+            )
+            .add_systems(
+                OnEnter(AppState::LoadingSavedGame),
+                load_saved_game.after(MapGenerated),
+            )
+            .add_systems(Update, save_game_on_key.run_if(in_state(AppState::InGame)));
     }
 }
 
@@ -68,7 +70,8 @@ mod color_serde {
             r: srgba.red,
             g: srgba.green,
             b: srgba.blue,
-        }.serialize(serializer)
+        }
+        .serialize(serializer)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Color, D::Error>
@@ -89,12 +92,14 @@ fn initialize_new_game(
 
     let mut country_entities = HashMap::new();
     for country_def in &country_defs {
-        let country_entity = commands.spawn(Country {
-            id: country_def.id,
-            name: country_def.name.clone(),
-            color: country_def.color,
-            owned_provinces: country_def.owned_provinces.clone(),
-        }).id();
+        let country_entity = commands
+            .spawn(Country {
+                id: country_def.id,
+                name: country_def.name.clone(),
+                color: country_def.color,
+                owned_provinces: country_def.owned_provinces.clone(),
+            })
+            .id();
 
         country_entities.insert(country_def.id, country_entity);
     }
@@ -103,7 +108,9 @@ fn initialize_new_game(
         if let Some(&country_entity) = country_entities.get(&country_def.id) {
             for &province_id in &country_def.owned_provinces {
                 if let Some(&province_entity) = province_map.0.get(&province_id) {
-                    commands.entity(province_entity).insert(OwnedBy(country_entity));
+                    commands
+                        .entity(province_entity)
+                        .insert(OwnedBy(country_entity));
                 }
             }
         }
@@ -139,29 +146,36 @@ fn load_and_apply_save(
     province_map: &ProvinceEntityMap,
     path: &str,
 ) -> Result<()> {
-    let save_data = load_save_file(path)?;  // Easy error propagation!
+    let save_data = load_save_file(path)?; // Easy error propagation!
 
     let mut country_entities = HashMap::new();
     for country_data in &save_data.countries {
-        let country_entity = commands.spawn(Country {
-            id: country_data.id,
-            name: country_data.name.clone(),
-            color: country_data.color,
-            owned_provinces: country_data.owned_provinces.clone(),
-        }).id();
+        let country_entity = commands
+            .spawn(Country {
+                id: country_data.id,
+                name: country_data.name.clone(),
+                color: country_data.color,
+                owned_provinces: country_data.owned_provinces.clone(),
+            })
+            .id();
 
         country_entities.insert(country_data.id, country_entity);
     }
 
     for country_data in &save_data.countries {
-        let country_entity = *country_entities.get(&country_data.id)
+        let country_entity = *country_entities
+            .get(&country_data.id)
             .context("Country entity not found")?;
 
         for &province_id in &country_data.owned_provinces {
-            let province_entity = *province_map.0.get(&province_id)
+            let province_entity = *province_map
+                .0
+                .get(&province_id)
                 .with_context(|| format!("Province {} not found in map", province_id))?;
 
-            commands.entity(province_entity).insert(OwnedBy(country_entity));
+            commands
+                .entity(province_entity)
+                .insert(OwnedBy(country_entity));
         }
     }
 
@@ -175,11 +189,17 @@ fn save_game_on_key(
     local_player: Option<Res<crate::components::player::LocalPlayer>>,
     player_query: Query<&crate::components::player::ControlsCountry>,
 ) {
-    if keyboard.just_pressed(KeyCode::F5) {
-        if let Err(e) = save_game(countries, provinces, local_player, player_query, "saves/quicksave.ron") {
-            eprintln!("Failed to save game: {:?}", e);
-            // Could also show this in UI
-        }
+    if keyboard.just_pressed(KeyCode::F5)
+        && let Err(e) = save_game(
+            countries,
+            provinces,
+            local_player,
+            player_query,
+            "saves/quicksave.ron",
+        )
+    {
+        eprintln!("Failed to save game: {:?}", e);
+        // Could also show this in UI
     }
 }
 
@@ -193,7 +213,8 @@ pub fn save_game(
     let mut country_data = Vec::new();
 
     for country in countries.iter() {
-        let owned_provinces: Vec<u32> = provinces.iter()
+        let owned_provinces: Vec<u32> = provinces
+            .iter()
             .filter_map(|(province, owner)| {
                 owner.and_then(|o| {
                     if countries.get(o.0).ok()?.id == country.id {
@@ -214,7 +235,9 @@ pub fn save_game(
     }
 
     let player_country_id = local_player.and_then(|lp| {
-        player_query.get(lp.0).ok()
+        player_query
+            .get(lp.0)
+            .ok()
             .and_then(|controls| countries.get(controls.0).ok())
             .map(|country| country.id)
     });
@@ -224,8 +247,7 @@ pub fn save_game(
         player_country_id,
     };
 
-    std::fs::create_dir_all("saves")
-        .context("Failed to create saves directory")?;
+    std::fs::create_dir_all("saves").context("Failed to create saves directory")?;
 
     let serialized = ron::ser::to_string_pretty(&save_data, Default::default())
         .context("Failed to serialize save data")?;
@@ -242,13 +264,11 @@ fn load_save_file(path: &str) -> Result<SaveData> {
     let file = std::fs::read_to_string(path)
         .with_context(|| format!("Failed to read save file at '{}'", path))?;
 
-    ron::from_str(&file)
-        .context("Save file is corrupted or invalid")
+    ron::from_str(&file).context("Save file is corrupted or invalid")
 }
 
-
 fn load_countries_from_file() -> Vec<CountryDef> {
-    let file = std::fs::read_to_string("assets/data/countries.ron")
-        .expect("Failed to read countries.ron");
+    let file =
+        std::fs::read_to_string("assets/data/countries.ron").expect("Failed to read countries.ron");
     ron::from_str(&file).expect("Failed to parse countries.ron")
 }

@@ -1,31 +1,26 @@
 // plugins/country_selection_ui.rs
-use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 use crate::components::country::Country;
-use crate::components::player::{Player, ControlsCountry, LocalPlayer};
+use crate::components::player::{ControlsCountry, LocalPlayer, Player};
 use crate::states::AppState;
+use bevy::prelude::*;
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 pub struct CountrySelectionUI;
 
 impl Plugin for CountrySelectionUI {
     fn build(&self, app: &mut App) {
-        app
-            .add_systems(OnEnter(AppState::CountrySelection), setup_country_selection)
-            .add_systems(OnExit(AppState::CountrySelection), cleanup_countries)
+        app.add_systems(OnEnter(AppState::CountrySelection), setup_country_selection)
+            .add_systems(OnEnter(AppState::InMainMenu), cleanup_countries)
             .add_systems(
                 EguiPrimaryContextPass,
-                country_selection_ui
-                    .run_if(in_state(AppState::CountrySelection))
+                country_selection_ui.run_if(in_state(AppState::CountrySelection)),
             );
     }
 }
 
 fn setup_country_selection() {}
 
-fn cleanup_countries(
-    mut commands: Commands,
-    countries: Query<Entity, With<Country>>,
-) {
+fn cleanup_countries(mut commands: Commands, countries: Query<Entity, With<Country>>) {
     for entity in countries.iter() {
         commands.entity(entity).despawn();
     }
@@ -61,13 +56,15 @@ fn country_selection_ui(
 
                         if ui.button(&country.name).clicked() {
                             // Create player entity
-                            let player_entity = commands.spawn((
-                                Player {
-                                    id: 0,
-                                    name: "Player 1".to_string(),
-                                },
-                                ControlsCountry(country_entity),
-                            )).id();
+                            let player_entity = commands
+                                .spawn((
+                                    Player {
+                                        id: 0,
+                                        name: "Player 1".to_string(),
+                                    },
+                                    ControlsCountry(country_entity),
+                                ))
+                                .id();
 
                             // Store as local player
                             commands.insert_resource(LocalPlayer(player_entity));

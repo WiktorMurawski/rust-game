@@ -1,9 +1,8 @@
+use crate::plugins::map_generation::{MapGenerated, MapGenerationPlugin};
 use crate::plugins::*;
 use crate::states::AppState;
 use bevy::ecs::query::QueryFilter;
 use bevy::prelude::*;
-use crate::components::GameWorldEntity;
-use crate::plugins::map_generation::{MapGenerated, MapGenerationPlugin};
 
 pub struct GameSystems;
 
@@ -27,7 +26,8 @@ impl Plugin for GameSystems {
             .add_plugins(SetupEguiCamera)
             .add_plugins(MainMenu)
             .add_plugins(CountrySelectionUI)
-            .add_plugins(ProvinceInfoUI);
+            .add_plugins(ProvinceInfoUI)
+            .add_plugins(PlayerCountryUI);
     }
 }
 
@@ -50,10 +50,11 @@ fn clear_cameras(
     clear_entities(&mut commands, &query3d);
 }
 
-fn clear_all(mut commands: Commands, query: Query<Entity>){
-    clear_entities(&mut commands, &query);
-}
+// fn clear_all(mut commands: Commands, query: Query<Entity>){
+//
+//     clear_entities(&mut commands, &query);
+// }
 
-fn clear_game_entities(mut commands: Commands, query: Query<Entity, With<GameWorldEntity>>) {
-    clear_entities(&mut commands, &query);
-}
+// fn clear_game_entities(mut commands: Commands, query: Query<Entity, With<GameWorldEntity>>) {
+//     clear_entities(&mut commands, &query);
+// }
