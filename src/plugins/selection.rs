@@ -1,11 +1,11 @@
 use std::cmp::Ordering;
 
+use crate::resources::MapSize;
+use crate::{components::province::Province, states::AppState};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::Vec2;
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_egui::EguiContexts;
-use crate::resources::MapSize;
-use crate::{components::province::Province, states::AppState};
 
 pub struct SelectionPlugin;
 
@@ -34,7 +34,7 @@ pub struct CurrentSelection {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SelectedEntity {
     Province(Entity),
-    //Army(Entity),
+    Army(Entity),
 }
 
 //fn print_selection(
@@ -66,7 +66,7 @@ fn update_selection(
     //camera_query: Query<(&Camera, &GlobalTransform)>,
 ) {
     if contexts.ctx_mut().expect("REASON").wants_pointer_input() {
-        return;  // UI has priority → don't process game clicks
+        return; // UI has priority → don't process game clicks
     }
 
     let mouse_buttons = mouse_and_window_and_camera.mouse;

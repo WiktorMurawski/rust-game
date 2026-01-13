@@ -1,3 +1,6 @@
+mod army_movement;
+mod army_visuals;
+mod buildings_ui;
 mod camera_controls;
 mod country_selection_ui;
 mod game_systems;
@@ -11,8 +14,10 @@ mod save_load;
 mod selection;
 mod setup_egui_camera;
 mod terrain_visual_3d;
-mod buildings_ui;
 
+pub use army_movement::ArmyMovementPlugin;
+pub use army_visuals::ArmyRendering;
+pub use buildings_ui::BuildingsUI;
 pub use camera_controls::GameCamera;
 pub use country_selection_ui::CountrySelectionUI;
 pub use game_systems::GameSystems;
@@ -25,4 +30,3 @@ pub use province_visuals::ProvinceVisualsPlugin;
 pub use save_load::SaveLoadPlugin;
 pub use selection::SelectionPlugin;
 pub use setup_egui_camera::SetupEguiCamera;
-pub use buildings_ui::BuildingsUI;

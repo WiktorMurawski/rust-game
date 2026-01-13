@@ -63,9 +63,8 @@ fn player_country_panel_with_flag(
 
     if let Some(country) = player_country {
         if let Some(flag_handle) = &country.flag {
-            texture_id_opt = Some(contexts.add_image(
-                bevy_egui::EguiTextureHandle::Strong(flag_handle.clone())
-            ));
+            texture_id_opt =
+                Some(contexts.add_image(bevy_egui::EguiTextureHandle::Strong(flag_handle.clone())));
         }
 
         let Ok(ctx) = contexts.ctx_mut() else {
@@ -91,15 +90,14 @@ fn player_country_panel_with_flag(
                     ui.add_space(10.0);
 
                     ui.vertical(|ui| {
+                        ui.label(egui::RichText::new(&country.name).heading().strong());
                         ui.label(
-                            egui::RichText::new(&country.name)
-                                .heading()
-                                .strong(),
-                        );
-                        ui.label(
-                            egui::RichText::new(format!("{} provinces", country.owned_provinces.len()))
-                                .small()
-                                .color(egui::Color32::GRAY),
+                            egui::RichText::new(format!(
+                                "{} provinces",
+                                country.owned_provinces.len()
+                            ))
+                            .small()
+                            .color(egui::Color32::GRAY),
                         );
                     });
                 });
@@ -114,9 +112,6 @@ fn show_color_square(ui: &mut egui::Ui, color: Color) {
         (color.to_srgba().blue * 255.0) as u8,
     );
 
-    let (rect, _) = ui.allocate_exact_size(
-        egui::vec2(40.0, 30.0),
-        egui::Sense::hover()
-    );
+    let (rect, _) = ui.allocate_exact_size(egui::vec2(40.0, 30.0), egui::Sense::hover());
     ui.painter().rect_filled(rect, 2.0, color32);
 }

@@ -1,7 +1,7 @@
 // plugins/save_load.rs
 use crate::components::country::*;
-use crate::components::province::*;
 use crate::components::player::*;
+use crate::components::province::*;
 use crate::plugins::map_generation::{MapGenerated, ProvinceEntityMap};
 use crate::states::AppState;
 use anyhow::{Context, Result};
@@ -96,7 +96,8 @@ fn initialize_new_game(
 
     let mut country_entities = HashMap::new();
     for country_def in &country_defs {
-        let flag = country_def.flag_path
+        let flag = country_def
+            .flag_path
             .as_ref()
             .map(|path| asset_server.load(path.clone()));
 
@@ -140,7 +141,12 @@ fn load_saved_game(
     asset_server: Res<AssetServer>,
 ) {
     // Use match with anyhow's Result
-    match load_and_apply_save(&mut commands, &province_map, asset_server, &save_file_path.0) {
+    match load_and_apply_save(
+        &mut commands,
+        &province_map,
+        asset_server,
+        &save_file_path.0,
+    ) {
         Ok(_) => {
             next_state.set(AppState::InGame);
             println!("Save loaded successfully!");
@@ -163,7 +169,8 @@ fn load_and_apply_save(
 
     let mut country_entities = HashMap::new();
     for country_data in &save_data.countries {
-        let flag = country_data.flag_path
+        let flag = country_data
+            .flag_path
             .as_ref()
             .map(|path| asset_server.load(path.clone()));
 
@@ -213,7 +220,10 @@ fn load_and_apply_save(
 
             commands.insert_resource(LocalPlayer(player_entity));
         } else {
-            println!("Warning: saved player country id {} not found in loaded countries", saved_country_id);
+            println!(
+                "Warning: saved player country id {} not found in loaded countries",
+                saved_country_id
+            );
         }
     } else {
         println!("No player country was saved → starting without local player control");

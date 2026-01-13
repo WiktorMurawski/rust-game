@@ -4,7 +4,7 @@
         name: "England",
         color: (0.8, 0.2, 0.2),
         owned_provinces: [101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122],
-        gold: 1000,
+        gold: 5000,
         flag_path: Some("flags/england.png"),
     ),
     CountryDef(
@@ -12,7 +12,7 @@
         name: "Ireland",
         color: (0.2, 0.5, 0.0),
         owned_provinces: [201,202,203,204],
-        gold: 1000,
+        gold: 5000,
         flag_path: Some("flags/ireland.png"),
     ),
     CountryDef(
@@ -20,7 +20,7 @@
         name: "Scotland",
         color: (0.2, 0.5, 0.8),
         owned_provinces: [301,302,303,304,305,306,307,308,309],
-        gold: 1000,
+        gold: 5000,
         flag_path: Some("flags/scotland.png"),
     ),
     CountryDef(
@@ -28,7 +28,7 @@
         name: "Wales",
         color: (0.3, 0.7, 0.0),
         owned_provinces: [401,402,403],
-        gold: 1000,
+        gold: 5000,
         flag_path: Some("flags/wales.png"),
     ),
 ]

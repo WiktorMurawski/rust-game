@@ -1,9 +1,9 @@
-use std::cmp::PartialEq;
 use crate::components::country::*;
 use crate::components::province::*;
 use crate::plugins::selection::Selected;
 use crate::states::AppState;
 use bevy::prelude::*;
+use std::cmp::PartialEq;
 
 pub struct ProvinceVisualsPlugin;
 
@@ -103,7 +103,7 @@ fn update_changed_province_colors(
             continue;
         };
 
-        if province.terrain == TerrainType::Water{
+        if province.terrain == TerrainType::Water {
             let color = province.terrain.color();
             material.base_color = color;
             continue;

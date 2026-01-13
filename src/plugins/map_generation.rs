@@ -1,5 +1,5 @@
 // plugins/map_generation.rs
-use crate::components::GameWorldEntity;
+use crate::components::buildings::Buildings;
 use crate::components::province::*;
 use crate::resources::MapSize;
 use crate::states::AppState;
@@ -7,7 +7,6 @@ use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 use earcutr::earcut;
 use voronoice::{Point, Voronoi};
-use crate::components::buildings::Buildings;
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MapGenerated;
@@ -16,15 +15,14 @@ pub struct MapGenerationPlugin;
 
 impl Plugin for MapGenerationPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_systems(
-                OnEnter(AppState::LoadingNewGame),
-                load_map_geometry.in_set(MapGenerated),
-            )
-            .add_systems(
-                OnEnter(AppState::LoadingSavedGame),
-                load_map_geometry.in_set(MapGenerated),
-            );
+        app.add_systems(
+            OnEnter(AppState::LoadingNewGame),
+            load_map_geometry.in_set(MapGenerated),
+        )
+        .add_systems(
+            OnEnter(AppState::LoadingSavedGame),
+            load_map_geometry.in_set(MapGenerated),
+        );
     }
 }
 
@@ -63,12 +61,13 @@ fn load_map_geometry(
             .spawn((
                 Mesh3d(meshes.add(mesh)),
                 MeshMaterial3d(material_handle),
-                GameWorldEntity,
                 province,
             ))
             .id();
 
-        commands.entity(province_entity).insert(Buildings::default());
+        commands
+            .entity(province_entity)
+            .insert(Buildings::default());
 
         province_entities.insert(province_id, province_entity);
 
@@ -83,7 +82,6 @@ fn load_map_geometry(
             .spawn((
                 Mesh3d(meshes.add(border_mesh)),
                 MeshMaterial3d(border_material),
-                GameWorldEntity,
                 ProvinceBorder { province_id },
             ))
             .set_parent_in_place(province_entity);
@@ -139,10 +137,10 @@ fn build_voronoi(centers: &[Vec2], map_size: Vec2) -> Option<voronoice::Voronoi>
         })
         .collect();
 
-    println!("sites generated:");
-    for s in &sites {
-        println!("{:?}", s);
-    }
+    // println!("sites generated:");
+    // for s in &sites {
+    //     println!("{:?}", s);
+    // }
 
     let padding = 1.01;
 
@@ -311,7 +309,6 @@ fn add_background_mesh(
             rotation: Quat::from_rotation_x(90f32.to_radians()),
             scale: Vec3::ONE * scale,
         },
-        GameWorldEntity,
     ));
 }
 

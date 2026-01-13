@@ -1,4 +1,3 @@
-use crate::components::GameWorldEntity;
 use crate::resources::MapSize;
 use crate::states::AppState;
 use bevy::input::mouse::MouseWheel;
@@ -36,7 +35,7 @@ fn setup_camera(mut commands: Commands) {
         Quat::from_axis_angle(Vec3::Y, 90.0f32.to_radians()),
     );
 
-    commands.spawn((Camera3d::default(), transform, GameWorldEntity));
+    commands.spawn((Camera3d::default(), transform));
 }
 
 fn camera_keyboard_controls(

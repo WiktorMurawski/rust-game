@@ -1,39 +1,45 @@
+use crate::components::army::Army;
+use crate::components::buildings::{ALL_BUILDINGS, BuildingType, Buildings};
 use crate::components::country::*;
+use crate::components::player::{ControlsCountry, LocalPlayer};
 use crate::components::province::*;
-use crate::plugins::selection::SelectedEntity;
 use crate::plugins::selection::CurrentSelection;
+use crate::plugins::selection::SelectedEntity;
 use crate::states::AppState;
 use bevy::app::Plugin;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
-use crate::components::buildings::{Buildings, ALL_BUILDINGS};
-use crate::components::player::{ControlsCountry, LocalPlayer};
 
 pub struct BuildingsUI;
 
 impl Plugin for BuildingsUI {
     fn build(&self, app: &mut App) {
         app.add_systems(
-                EguiPrimaryContextPass,
-                province_building_ui.run_if(in_state(AppState::InGame)),
-            );
+            EguiPrimaryContextPass,
+            province_building_ui.run_if(in_state(AppState::InGame)),
+        );
     }
 }
 
 fn province_building_ui(
+    mut commands: Commands,
     mut contexts: EguiContexts,
     selected: Res<CurrentSelection>,
-    mut provinces: Query<(&OwnedBy, &mut Buildings)>,
+    mut provinces: Query<(&Province, &OwnedBy, &mut Buildings)>,
     mut countries: Query<&mut Country>,
     local_player: Option<Res<LocalPlayer>>,
     player_query: Query<&ControlsCountry>,
 ) {
     // println!("province_building_ui");
 
-    let Ok(ctx) = contexts.ctx_mut() else { return; };
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
 
     if let Some(SelectedEntity::Province(province_entity)) = selected.entity {
-        let Ok((owned_by, mut buildings)) = provinces.get_mut(province_entity) else { return; };
+        let Ok((province, owned_by, mut buildings)) = provinces.get_mut(province_entity) else {
+            return;
+        };
 
         // Check if player owns this province
         let player_country_entity = local_player
@@ -41,11 +47,13 @@ fn province_building_ui(
             .map(|controls| controls.0);
 
         if Some(owned_by.0) != player_country_entity {
-            return;  // Not owned by player
+            return; // Not owned by player
         }
 
         // Get player's country for gold
-        let Ok(mut player_country) = countries.get_mut(owned_by.0) else { return; };
+        let Ok(mut player_country) = countries.get_mut(owned_by.0) else {
+            return;
+        };
 
         egui::Window::new("Build in Province")
             .resizable(true)
@@ -72,6 +80,30 @@ fn province_building_ui(
                             buildings.built.push(building_type);
                         }
                     });
+                }
+
+                if buildings.built.contains(&BuildingType::Barracks) {
+                    ui.separator();
+                    ui.label("Recruitment:");
+                    if ui.button("Recruit Army (Cost: 100 gold)").clicked() && player_country.gold >= 100 {
+                        player_country.gold -= 100;
+
+                        commands.spawn((
+                            Army {
+                                owner: owned_by.0,
+                                province: province_entity,
+                                units: 100,
+                            },
+                            // Proper spatial bundle
+                            Transform::from_xyz(province.center.x, 0.0, province.center.y),
+                            GlobalTransform::default(),
+                            Visibility::Visible,
+                            InheritedVisibility::default(),
+                            ViewVisibility::default(),
+                        ));
+
+                        println!("Recruited army in province {}", province.id);
+                    }
                 }
             });
     }
