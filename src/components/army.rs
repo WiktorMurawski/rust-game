@@ -8,6 +8,12 @@ pub struct Army {
     pub units: u32,
 }
 
+impl Army {
+    pub fn merge(&mut self, other: &Army) {
+        self.units += other.units;
+    }
+}
+
 #[derive(Component)]
 pub struct ArmySelected;
 

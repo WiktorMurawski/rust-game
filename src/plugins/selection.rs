@@ -66,7 +66,7 @@ fn update_selection(
     //camera_query: Query<(&Camera, &GlobalTransform)>,
 ) {
     if contexts.ctx_mut().expect("REASON").wants_pointer_input() {
-        return; // UI has priority → don't process game clicks
+        return;
     }
 
     let mouse_buttons = mouse_and_window_and_camera.mouse;

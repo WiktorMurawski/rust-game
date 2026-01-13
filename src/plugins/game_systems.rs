@@ -22,6 +22,7 @@ impl Plugin for GameSystems {
             .add_plugins(ProvinceVisualsPlugin)
             .add_plugins(SelectionPlugin)
             .add_plugins(SaveLoadPlugin)
+            .add_plugins(ArmySystemsPlugin)
             // UI
             .add_plugins(SetupEguiCamera)
             .add_plugins(MainMenu)

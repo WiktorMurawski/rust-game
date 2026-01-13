@@ -85,7 +85,9 @@ fn province_building_ui(
                 if buildings.built.contains(&BuildingType::Barracks) {
                     ui.separator();
                     ui.label("Recruitment:");
-                    if ui.button("Recruit Army (Cost: 100 gold)").clicked() && player_country.gold >= 100 {
+                    if ui.button("Recruit Army (Cost: 100 gold)").clicked()
+                        && player_country.gold >= 100
+                    {
                         player_country.gold -= 100;
 
                         commands.spawn((

@@ -1,5 +1,4 @@
 use crate::components::army::Army;
-use crate::components::province::Province;
 use crate::states::AppState;
 use bevy::prelude::*;
 use bevy_rich_text3d::Text3d;
@@ -10,12 +9,7 @@ impl Plugin for ArmyRendering {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (
-                render_armies,
-                billboard_text,
-                update_army_labels,
-            )
-                .run_if(in_state(AppState::InGame)),
+            (render_armies, billboard_text, update_army_labels).run_if(in_state(AppState::InGame)),
         );
     }
 }
@@ -30,7 +24,7 @@ fn update_army_labels(
     mut labels: Query<(&mut Text3d, &ChildOf), With<ArmyLabel>>,
     armies: Query<&Army, Changed<Army>>,
 ) {
-    println!("LEN: {}",labels.iter().len());
+    println!("LEN: {}", labels.iter().len());
     for (mut text, child_of) in &mut labels {
         if let Ok(army) = armies.get(child_of.parent()) {
             *text = Text3d::new(format!("{}", army.units));
@@ -50,12 +44,12 @@ fn billboard_text(
 
 fn render_armies(
     mut commands: Commands,
-    armies: Query<(Entity, &Army, &Transform), Added<Army>>,
-    provinces: Query<&Province>,
+    armies: Query<(Entity, &Army), Added<Army>>,
+    // provinces: Query<&Province>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for (army_entity, army, transform) in &armies {
+    for (army_entity, army) in &armies {
         commands.entity(army_entity).with_children(|parent| {
             parent.spawn((
                 ArmyModel,

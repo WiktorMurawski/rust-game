@@ -1,4 +1,5 @@
 mod army_movement;
+mod army_systems;
 mod army_visuals;
 mod buildings_ui;
 mod camera_controls;
@@ -16,6 +17,7 @@ mod setup_egui_camera;
 mod terrain_visual_3d;
 
 pub use army_movement::ArmyMovementPlugin;
+pub use army_systems::ArmySystemsPlugin;
 pub use army_visuals::ArmyRendering;
 pub use buildings_ui::BuildingsUI;
 pub use camera_controls::GameCamera;
