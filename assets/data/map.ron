@@ -203,43 +203,6 @@
         ),
 
         (
-            id: 201,
-            center: (-111.0, -152.0),
-            terrain: Plains,
-        ),
-        (
-            id: 202,
-            center: (-77.0, -160.0),
-            terrain: Plains,
-        ),
-        (
-            id: 203,
-            center: (23.0, -119.0),
-            terrain: Plains,
-        ),
-        (
-            id: 204,
-            center: (-16.0, -62.0),
-            terrain: Plains,
-        ),
-
-        (
-            id: 401,
-            center: (-89.0, -4.0),
-            terrain: Mountains,
-        ),
-        (
-            id: 402,
-            center: (-126.0, 12.0),
-            terrain: City,
-        ),
-        (
-            id: 403,
-            center: (-142.0, -22.0),
-            terrain: Plains,
-        ),
-
-        (
             id: 1041,
             center: (-108.0, -40.0),
             terrain: Water,
@@ -434,6 +397,27 @@
         ),
 
         (
+            id: 201,
+            center: (-111.0, -152.0),
+            terrain: Plains,
+        ),
+        (
+            id: 202,
+            center: (-77.0, -160.0),
+            terrain: Plains,
+        ),
+        (
+            id: 203,
+            center: (23.0, -119.0),
+            terrain: Plains,
+        ),
+        (
+            id: 204,
+            center: (-16.0, -62.0),
+            terrain: Plains,
+        ),
+
+        (
             id: 301,
             center: (39.0, 39.0),
             terrain: City,
@@ -479,23 +463,21 @@
             terrain: Plains,
         ),
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        (
+            id: 401,
+            center: (-89.0, -4.0),
+            terrain: Mountains,
+        ),
+        (
+            id: 402,
+            center: (-126.0, 12.0),
+            terrain: City,
+        ),
+        (
+            id: 403,
+            center: (-142.0, -22.0),
+            terrain: Plains,
+        ),
 
 
 

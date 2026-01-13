@@ -11,6 +11,7 @@ mod save_load;
 mod selection;
 mod setup_egui_camera;
 mod terrain_visual_3d;
+mod buildings_ui;
 
 pub use camera_controls::GameCamera;
 pub use country_selection_ui::CountrySelectionUI;
@@ -24,3 +25,4 @@ pub use province_visuals::ProvinceVisualsPlugin;
 pub use save_load::SaveLoadPlugin;
 pub use selection::SelectionPlugin;
 pub use setup_egui_camera::SetupEguiCamera;
+pub use buildings_ui::BuildingsUI;

@@ -1,0 +1,3 @@
+W/A/S/D - camera movement
+B - borders display on/off
+M - switch map display mode

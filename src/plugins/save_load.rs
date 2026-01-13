@@ -1,6 +1,7 @@
 // plugins/save_load.rs
 use crate::components::country::*;
 use crate::components::province::*;
+use crate::components::player::*;
 use crate::plugins::map_generation::{MapGenerated, ProvinceEntityMap};
 use crate::states::AppState;
 use anyhow::{Context, Result};
@@ -41,7 +42,9 @@ pub struct CountrySaveData {
     pub name: String,
     #[serde(with = "color_serde")]
     pub color: Color,
+    pub gold: u32,
     pub owned_provinces: Vec<u32>,
+    pub flag_path: Option<String>,
 }
 
 #[derive(Resource, Default)]
@@ -87,17 +90,25 @@ fn initialize_new_game(
     mut commands: Commands,
     province_map: Res<ProvinceEntityMap>,
     mut next_state: ResMut<NextState<AppState>>,
+    asset_server: Res<AssetServer>,
 ) {
     let country_defs = load_countries_from_file();
 
     let mut country_entities = HashMap::new();
     for country_def in &country_defs {
+        let flag = country_def.flag_path
+            .as_ref()
+            .map(|path| asset_server.load(path.clone()));
+
         let country_entity = commands
             .spawn(Country {
                 id: country_def.id,
                 name: country_def.name.clone(),
                 color: country_def.color,
                 owned_provinces: country_def.owned_provinces.clone(),
+                gold: country_def.gold,
+                flag,
+                flag_path: country_def.flag_path.clone(),
             })
             .id();
 
@@ -126,9 +137,10 @@ fn load_saved_game(
     save_file_path: Res<SaveFilePath>,
     mut next_state: ResMut<NextState<AppState>>,
     mut error: ResMut<SaveLoadError>,
+    asset_server: Res<AssetServer>,
 ) {
     // Use match with anyhow's Result
-    match load_and_apply_save(&mut commands, &province_map, &save_file_path.0) {
+    match load_and_apply_save(&mut commands, &province_map, asset_server, &save_file_path.0) {
         Ok(_) => {
             next_state.set(AppState::InGame);
             println!("Save loaded successfully!");
@@ -144,18 +156,26 @@ fn load_saved_game(
 fn load_and_apply_save(
     commands: &mut Commands,
     province_map: &ProvinceEntityMap,
+    asset_server: Res<AssetServer>,
     path: &str,
 ) -> Result<()> {
-    let save_data = load_save_file(path)?; // Easy error propagation!
+    let save_data = load_save_file(path)?;
 
     let mut country_entities = HashMap::new();
     for country_data in &save_data.countries {
+        let flag = country_data.flag_path
+            .as_ref()
+            .map(|path| asset_server.load(path.clone()));
+
         let country_entity = commands
             .spawn(Country {
                 id: country_data.id,
                 name: country_data.name.clone(),
                 color: country_data.color,
                 owned_provinces: country_data.owned_provinces.clone(),
+                gold: country_data.gold,
+                flag,
+                flag_path: country_data.flag_path.clone(),
             })
             .id();
 
@@ -179,6 +199,26 @@ fn load_and_apply_save(
         }
     }
 
+    if let Some(saved_country_id) = save_data.player_country_id {
+        if let Some(&country_entity) = country_entities.get(&saved_country_id) {
+            let player_entity = commands
+                .spawn((
+                    Player {
+                        id: 0,
+                        name: "Player 1".to_string(),
+                    },
+                    ControlsCountry(country_entity),
+                ))
+                .id();
+
+            commands.insert_resource(LocalPlayer(player_entity));
+        } else {
+            println!("Warning: saved player country id {} not found in loaded countries", saved_country_id);
+        }
+    } else {
+        println!("No player country was saved → starting without local player control");
+    }
+
     Ok(())
 }
 
@@ -186,8 +226,8 @@ fn save_game_on_key(
     keyboard: Res<ButtonInput<KeyCode>>,
     countries: Query<&Country>,
     provinces: Query<(&Province, Option<&OwnedBy>)>,
-    local_player: Option<Res<crate::components::player::LocalPlayer>>,
-    player_query: Query<&crate::components::player::ControlsCountry>,
+    local_player: Option<Res<LocalPlayer>>,
+    player_query: Query<&ControlsCountry>,
 ) {
     if keyboard.just_pressed(KeyCode::F5)
         && let Err(e) = save_game(
@@ -199,7 +239,6 @@ fn save_game_on_key(
         )
     {
         eprintln!("Failed to save game: {:?}", e);
-        // Could also show this in UI
     }
 }
 
@@ -231,6 +270,8 @@ pub fn save_game(
             name: country.name.clone(),
             color: country.color,
             owned_provinces,
+            gold: country.gold,
+            flag_path: country.flag_path.clone(),
         });
     }
 

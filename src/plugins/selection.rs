@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::Vec2;
 use bevy::{prelude::*, window::PrimaryWindow};
-
+use bevy_egui::EguiContexts;
 use crate::resources::MapSize;
 use crate::{components::province::Province, states::AppState};
 
@@ -46,30 +46,38 @@ pub enum SelectedEntity {
 //}
 
 #[derive(SystemParam)]
-struct WindowAndCamera<'w, 's> {
+struct MouseAndWindowAndCamera<'w, 's> {
+    mouse: Res<'w, ButtonInput<MouseButton>>,
     window: Query<'w, 's, &'static Window, With<PrimaryWindow>>,
     camera: Query<'w, 's, (&'static Camera, &'static GlobalTransform)>,
 }
 
 fn update_selection(
     mut commands: Commands,
-    mouse_buttons: Res<ButtonInput<MouseButton>>,
+    // mouse_buttons: Res<ButtonInput<MouseButton>>,
     //provinces: Query<&Province>,
     province_query: Query<(Entity, &Province)>,
     mut current_selection: ResMut<CurrentSelection>,
     selected_query: Query<Entity, With<Selected>>,
     map_size: Res<MapSize>,
-    window_and_camera: WindowAndCamera,
+    mouse_and_window_and_camera: MouseAndWindowAndCamera,
+    mut contexts: EguiContexts,
     //window_query: Query<&Window, With<PrimaryWindow>>,
     //camera_query: Query<(&Camera, &GlobalTransform)>,
 ) {
+    if contexts.ctx_mut().expect("REASON").wants_pointer_input() {
+        return;  // UI has priority → don't process game clicks
+    }
+
+    let mouse_buttons = mouse_and_window_and_camera.mouse;
+
     if mouse_buttons.just_pressed(MouseButton::Left) {
         // println!("LMB pressed");
 
         let provinces = province_query;
 
-        let window_query = window_and_camera.window;
-        let camera_query = window_and_camera.camera;
+        let window_query = mouse_and_window_and_camera.window;
+        let camera_query = mouse_and_window_and_camera.camera;
 
         if let Some(mouse_pos) = mouse_to_world_coords(window_query, camera_query) {
             if (mouse_pos.x).abs() * 2.0 > map_size.0.x || (mouse_pos.y).abs() * 2.0 > map_size.0.y

@@ -24,7 +24,6 @@ fn cleanup_countries(mut commands: Commands, countries: Query<Entity, With<Count
     for entity in countries.iter() {
         commands.entity(entity).despawn();
     }
-    println!("Cleaned up {} countries", countries.iter().count());
 }
 
 fn country_selection_ui(

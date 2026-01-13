@@ -7,6 +7,9 @@ pub struct Country {
     pub name: String,
     pub color: Color,
     pub owned_provinces: Vec<u32>,
+    pub gold: u32,
+    pub flag: Option<Handle<Image>>,
+    pub flag_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,7 +18,9 @@ pub struct CountryDef {
     pub name: String,
     #[serde(with = "color_def")]
     pub color: Color,
+    pub gold: u32,
     pub owned_provinces: Vec<u32>,
+    pub flag_path: Option<String>,
 }
 
 mod color_def {

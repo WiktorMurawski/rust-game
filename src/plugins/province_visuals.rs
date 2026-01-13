@@ -58,7 +58,6 @@ type ProvinceQuery<'a> = (
     Option<&'a OwnedBy>,
 );
 
-// Update all provinces when map mode changes
 fn update_province_colors(
     map_mode: Res<MapMode>,
     provinces: Query<ProvinceQuery>,
@@ -93,7 +92,6 @@ fn update_province_colors(
     }
 }
 
-// Update only provinces that had ownership changes
 fn update_changed_province_colors(
     map_mode: Res<MapMode>,
     changed_provinces: Query<ProvinceQuery>,
@@ -160,29 +158,23 @@ fn update_border_visibility(
 }
 
 fn update_selected_province_borders(
-    // Provinces that just got Selected added
     newly_selected: Query<&Children, (With<Province>, Added<Selected>)>,
-    // Provinces that exist and might be selected
     all_provinces: Query<(&Children, Has<Selected>), With<Province>>,
     mut removed: RemovedComponents<Selected>,
     borders: Query<&MeshMaterial3d<StandardMaterial>, With<ProvinceBorder>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // Handle newly selected provinces
     for children in newly_selected.iter() {
         update_border_color(children, true, &borders, &mut materials);
     }
 
-    // Handle deselected provinces
     for entity in removed.read() {
-        // Entity might have been despawned, so check if it still exists
         if let Ok((children, _)) = all_provinces.get(entity) {
             update_border_color(children, false, &borders, &mut materials);
         }
     }
 }
 
-// Helper function to reduce duplication
 fn update_border_color(
     children: &Children,
     selected: bool,
@@ -194,9 +186,9 @@ fn update_border_color(
             && let Some(material) = materials.get_mut(&border_material.0)
         {
             material.base_color = if selected {
-                Color::srgb(1.0, 1.0, 0.0) // Yellow for selected
+                Color::srgb(1.0, 1.0, 0.0)
             } else {
-                Color::srgb(0.2, 0.2, 0.2) // Dark gray for normal
+                Color::srgb(0.2, 0.2, 0.2)
             };
         }
     }

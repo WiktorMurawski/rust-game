@@ -7,6 +7,7 @@ use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 use earcutr::earcut;
 use voronoice::{Point, Voronoi};
+use crate::components::buildings::Buildings;
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MapGenerated;
@@ -16,7 +17,6 @@ pub struct MapGenerationPlugin;
 impl Plugin for MapGenerationPlugin {
     fn build(&self, app: &mut App) {
         app
-            // Load map geometry for both new and saved games
             .add_systems(
                 OnEnter(AppState::LoadingNewGame),
                 load_map_geometry.in_set(MapGenerated),
@@ -41,7 +41,6 @@ fn load_map_geometry(
 
     commands.insert_resource(MapSize(map_size));
 
-    // Generate provinces using Voronoi (stays here!)
     let provinces = generate_provinces(&map_data.provinces, map_size);
     let province_meshes = provinces_to_meshes(&provinces);
 
@@ -58,7 +57,7 @@ fn load_map_geometry(
             ..default()
         });
 
-        let border_mesh = polygon_to_border_mesh(&province.polygon, 2.0);
+        let border_mesh = polygon_to_border_mesh(&province.polygon, 1.0);
 
         let province_entity = commands
             .spawn((
@@ -68,6 +67,8 @@ fn load_map_geometry(
                 province,
             ))
             .id();
+
+        commands.entity(province_entity).insert(Buildings::default());
 
         province_entities.insert(province_id, province_entity);
 
@@ -101,7 +102,6 @@ fn load_map_geometry(
     );
 }
 
-// All your Voronoi functions stay here
 fn generate_provinces(province_defs: &[ProvinceDef], map_size: Vec2) -> Vec<Province> {
     let province_centers: Vec<Vec2> = province_defs
         .iter()

@@ -27,7 +27,8 @@ impl Plugin for GameSystems {
             .add_plugins(MainMenu)
             .add_plugins(CountrySelectionUI)
             .add_plugins(ProvinceInfoUI)
-            .add_plugins(PlayerCountryUI);
+            .add_plugins(PlayerCountryUI)
+            .add_plugins(BuildingsUI);
     }
 }
 

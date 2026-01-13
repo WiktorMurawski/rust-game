@@ -14,7 +14,6 @@ pub struct Province {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ProvinceDef {
     pub id: u32,
-    //pub center: Vec2,
     pub center: (f32, f32),
     pub terrain: TerrainType,
 }
@@ -29,7 +28,6 @@ pub struct OwnedBy(pub Entity);
 
 #[derive(Component)]
 pub struct Occupied {
-    //pub original_owner: Entity,
     pub occupier: Entity,
 }
 
