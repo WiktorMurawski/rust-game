@@ -12,10 +12,8 @@ impl Plugin for GameSystems {
             .insert_resource(ClearColor(Color::srgb_u8(30, 30, 30)))
             .add_systems(Startup, setup)
             .add_systems(OnEnter(AppState::InGame), clear_cameras)
-            .add_systems(
-                OnEnter(AppState::InGame),
-                terrain_visual_3d::spawn_3d_objects.after(MapGenerated),
-            )
+            // Game Plugins
+            .add_plugins(Terrain3DVisualsPlugin)
             .add_plugins(MapGenerationPlugin)
             .add_plugins(GameCamera)
             .add_plugins(Lighting)

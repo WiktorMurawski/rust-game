@@ -24,7 +24,6 @@ fn update_army_labels(
     mut labels: Query<(&mut Text3d, &ChildOf), With<ArmyLabel>>,
     armies: Query<&Army, Changed<Army>>,
 ) {
-    println!("LEN: {}", labels.iter().len());
     for (mut text, child_of) in &mut labels {
         if let Ok(army) = armies.get(child_of.parent()) {
             *text = Text3d::new(format!("{}", army.units));

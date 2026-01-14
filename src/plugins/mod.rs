@@ -32,3 +32,4 @@ pub use province_visuals::ProvinceVisualsPlugin;
 pub use save_load::SaveLoadPlugin;
 pub use selection::SelectionPlugin;
 pub use setup_egui_camera::SetupEguiCamera;
+pub use terrain_visual_3d::Terrain3DVisualsPlugin;

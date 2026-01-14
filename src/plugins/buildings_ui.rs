@@ -30,8 +30,6 @@ fn province_building_ui(
     local_player: Option<Res<LocalPlayer>>,
     player_query: Query<&ControlsCountry>,
 ) {
-    // println!("province_building_ui");
-
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
@@ -41,22 +39,22 @@ fn province_building_ui(
             return;
         };
 
-        // Check if player owns this province
         let player_country_entity = local_player
             .and_then(|lp| player_query.get(lp.0).ok())
             .map(|controls| controls.0);
 
         if Some(owned_by.0) != player_country_entity {
-            return; // Not owned by player
+            return;
         }
 
-        // Get player's country for gold
         let Ok(mut player_country) = countries.get_mut(owned_by.0) else {
             return;
         };
 
         egui::Window::new("Build in Province")
-            .resizable(true)
+            .resizable(false)
+            .anchor(egui::Align2::LEFT_BOTTOM, [10.0, -170.0])
+            .pivot(egui::Align2::LEFT_BOTTOM)
             .show(ctx, |ui| {
                 ui.label("Available Buildings:");
                 for &building_type in &ALL_BUILDINGS {

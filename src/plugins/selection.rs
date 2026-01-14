@@ -54,60 +54,54 @@ struct MouseAndWindowAndCamera<'w, 's> {
 
 fn update_selection(
     mut commands: Commands,
-    // mouse_buttons: Res<ButtonInput<MouseButton>>,
-    //provinces: Query<&Province>,
-    province_query: Query<(Entity, &Province)>,
+    mut contexts: EguiContexts,
     mut current_selection: ResMut<CurrentSelection>,
     selected_query: Query<Entity, With<Selected>>,
+    province_query: Query<(Entity, &Province)>,
     map_size: Res<MapSize>,
     mouse_and_window_and_camera: MouseAndWindowAndCamera,
-    mut contexts: EguiContexts,
-    //window_query: Query<&Window, With<PrimaryWindow>>,
-    //camera_query: Query<(&Camera, &GlobalTransform)>,
 ) {
     if contexts.ctx_mut().expect("REASON").wants_pointer_input() {
         return;
     }
 
     let mouse_buttons = mouse_and_window_and_camera.mouse;
+    let window_query = mouse_and_window_and_camera.window;
+    let camera_query = mouse_and_window_and_camera.camera;
 
-    if mouse_buttons.just_pressed(MouseButton::Left) {
-        // println!("LMB pressed");
+    if !mouse_buttons.just_pressed(MouseButton::Left) {
+        return;
+    }
 
-        let provinces = province_query;
+    let provinces = province_query;
 
-        let window_query = mouse_and_window_and_camera.window;
-        let camera_query = mouse_and_window_and_camera.camera;
+    if let Some(mouse_pos) = mouse_to_world_coords(window_query, camera_query) {
+        if (mouse_pos.x).abs() * 2.0 > map_size.0.x || (mouse_pos.y).abs() * 2.0 > map_size.0.y {
+            for entity in selected_query.iter() {
+                commands.entity(entity).remove::<Selected>();
+            }
+            current_selection.entity = None;
+            return;
+        }
 
-        if let Some(mouse_pos) = mouse_to_world_coords(window_query, camera_query) {
-            if (mouse_pos.x).abs() * 2.0 > map_size.0.x || (mouse_pos.y).abs() * 2.0 > map_size.0.y
-            {
-                for entity in selected_query.iter() {
-                    commands.entity(entity).remove::<Selected>();
-                }
-                current_selection.entity = None;
+        let closest = provinces.iter().min_by(|(_, a), (_, b)| {
+            squared_distance(a.center, mouse_pos)
+                .partial_cmp(&squared_distance(b.center, mouse_pos))
+                .unwrap_or(Ordering::Equal)
+        });
+
+        if let Some((province_entity, _province)) = closest {
+            if current_selection.entity == Some(SelectedEntity::Province(province_entity)) {
                 return;
             }
 
-            let closest = provinces.iter().min_by(|(_, a), (_, b)| {
-                squared_distance(a.center, mouse_pos)
-                    .partial_cmp(&squared_distance(b.center, mouse_pos))
-                    .unwrap_or(Ordering::Equal)
-            });
-
-            if let Some((province_entity, _province)) = closest {
-                if current_selection.entity == Some(SelectedEntity::Province(province_entity)) {
-                    return;
-                }
-
-                for entity in selected_query.iter() {
-                    commands.entity(entity).remove::<Selected>();
-                }
-                current_selection.entity = None;
-
-                commands.entity(province_entity).insert(Selected);
-                current_selection.entity = Some(SelectedEntity::Province(province_entity));
+            for entity in selected_query.iter() {
+                commands.entity(entity).remove::<Selected>();
             }
+            current_selection.entity = None;
+
+            commands.entity(province_entity).insert(Selected);
+            current_selection.entity = Some(SelectedEntity::Province(province_entity));
         }
     }
 }

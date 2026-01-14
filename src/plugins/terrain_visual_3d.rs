@@ -1,6 +1,20 @@
 use bevy::prelude::*;
 
 use crate::components::province::Province;
+use crate::plugins::map_generation::MapGenerated;
+use crate::plugins::terrain_visual_3d;
+use crate::states::AppState;
+
+pub struct Terrain3DVisualsPlugin;
+
+impl Plugin for Terrain3DVisualsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            OnEnter(AppState::InGame),
+            terrain_visual_3d::spawn_3d_objects.after(MapGenerated),
+        );
+    }
+}
 
 const SCALE: f32 = 5.0;
 

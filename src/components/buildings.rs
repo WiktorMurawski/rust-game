@@ -32,8 +32,8 @@ impl BuildingType {
 
     pub fn description(&self) -> &'static str {
         match self {
-            BuildingType::Farm => "Increases food production",
-            BuildingType::Mine => "Increases mineral output",
+            BuildingType::Farm => "Increases population growth",
+            BuildingType::Mine => "Increases province income",
             BuildingType::Barracks => "Allows recruiting troops",
         }
     }

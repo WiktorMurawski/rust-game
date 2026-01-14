@@ -1,6 +1,6 @@
-use bevy::prelude::*;
 use crate::components::army::Army;
 use crate::states::AppState;
+use bevy::prelude::*;
 use std::collections::HashMap;
 
 pub struct ArmySystemsPlugin;
