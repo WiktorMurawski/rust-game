@@ -1,19 +1,22 @@
-use std::cmp::Ordering;
-use bevy::ecs::system::SystemParam;
-use bevy::prelude::*;
 use crate::components::army::{Army, PendingMove};
 use crate::components::country::{Relation, Relations};
 use crate::components::province::{OwnedBy, Province, TerrainType};
-use crate::misc::{mouse_to_world_coords, squared_distance, MouseAndWindowAndCamera};
+use crate::misc::{MouseAndWindowAndCamera, mouse_to_world_coords, squared_distance};
 use crate::plugins::selection::{CurrentSelection, SelectedEntity};
 use crate::states::{AppState, GamePhase};
+use bevy::ecs::system::SystemParam;
+use bevy::prelude::*;
+use std::cmp::Ordering;
 
 pub struct ArmyMovementPlugin;
 
 impl Plugin for ArmyMovementPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, queue_army_move.run_if(in_state(AppState::InGame)))
-            .add_systems(Update, draw_pending_move_arrows.run_if(in_state(AppState::InGame)));
+            .add_systems(
+                Update,
+                draw_pending_move_arrows.run_if(in_state(AppState::InGame)),
+            );
     }
 }
 
@@ -50,64 +53,65 @@ fn queue_army_move(
         return;
     };
 
-    // Only if we have exactly one army selected
-    let SelectedEntity::Army(army_entity) = current_selection.entity.unwrap_or(SelectedEntity::Province(Entity::PLACEHOLDER)) else {
+    let Some(SelectedEntity::Army(army_entity)) = current_selection.entity else {
         return;
     };
 
-    let Ok(army) = armies.get(army_entity) else { return };
-    if pending_moves.get(army_entity).is_ok() {
-        return; // already has pending move
-    }
+    let Ok(army) = armies.get(army_entity) else {
+        return;
+    };
 
-    // Find closest province under cursor
     let Some((target_province_entity, target_province, target_owned_by)) =
         province_query.iter().min_by(|(_, a, _), (_, b, _)| {
             squared_distance(a.center, mouse_pos)
                 .partial_cmp(&squared_distance(b.center, mouse_pos))
                 .unwrap_or(Ordering::Equal)
-        }) else {
+        })
+    else {
         return;
     };
 
-    // Get current province info
-    let Ok((current_province_entity, current_prov, current_owned_by)) =
-        province_query.get(army.province) else {
+    let Ok((_current_prov_entity, current_prov, _)) = province_query.get(army.province) else {
         return;
     };
 
     let is_adjacent = current_prov.neighbors.contains(&target_province.id);
     let is_land = target_province.terrain != TerrainType::Water;
 
-    // Diplomacy check
     let can_enter = if army.owner == target_owned_by.owner {
-        // Same owner → always allowed
         true
     } else {
-        // Different owner → check if at war
         relations
             .get(army.owner)
             .ok()
             .is_some_and(|rels| rels.get(target_owned_by.owner) == Relation::War)
     };
 
-    if !is_adjacent || !is_land || !can_enter {
-        println!(
-            "Invalid move attempt: adjacent={}, land={}, can_enter={}",
-            is_adjacent, is_land, can_enter
-        );
+    let is_valid_target = is_adjacent && is_land && can_enter;
+
+    if let Ok(pending) = pending_moves.get(army_entity) {
+        if !is_valid_target {
+            return;
+        }
+
+        if pending.target_province == target_province_entity {
+            commands.entity(army_entity).remove::<PendingMove>();
+            return;
+        }
+
+        commands.entity(army_entity).insert(PendingMove {
+            target_province: target_province_entity,
+        });
         return;
     }
 
-    // Queue the move
+    if !is_valid_target {
+        return;
+    }
+
     commands.entity(army_entity).insert(PendingMove {
         target_province: target_province_entity,
     });
-
-    println!(
-        "Move queued: Army {:?} from province {:?} to province {:?}",
-        army_entity, current_province_entity, target_province_entity
-    );
 }
 
 fn draw_pending_move_arrows(
@@ -118,7 +122,7 @@ fn draw_pending_move_arrows(
     for (pending, transform) in &pending_armies {
         if let Ok(target) = provinces.get(pending.target_province) {
             let start = transform.translation();
-            let end   = Vec3::new(target.center.x, 0.15, target.center.y); // slightly above ground
+            let end = Vec3::new(target.center.x, 0.15, target.center.y); // slightly above ground
 
             gizmos.arrow(
                 start,

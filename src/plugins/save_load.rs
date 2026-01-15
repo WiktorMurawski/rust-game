@@ -42,7 +42,7 @@ pub struct CountrySaveData {
     pub name: String,
     #[serde(with = "color_serde")]
     pub color: Color,
-    pub gold: u32,
+    pub gold: u64,
     pub owned_provinces: Vec<u32>,
     pub flag_path: Option<String>,
 }
@@ -93,9 +93,9 @@ fn initialize_new_game(
     asset_server: Res<AssetServer>,
 ) {
     let country_defs = match load_countries_from_file() {
-        Ok(x) => {x}
+        Ok(x) => x,
         Err(err) => {
-            eprintln!("{:?}",err);
+            eprintln!("{:?}", err);
             return;
         }
     };
@@ -108,16 +108,18 @@ fn initialize_new_game(
             .map(|path| asset_server.load(path.clone()));
 
         let country_entity = commands
-            .spawn((Country {
-                id: country_def.id,
-                name: country_def.name.clone(),
-                color: country_def.color,
-                owned_provinces: country_def.owned_provinces.clone(),
-                gold: country_def.gold,
-                flag,
-                flag_path: country_def.flag_path.clone(),
-            },
-                    Relations::default(),))
+            .spawn((
+                Country {
+                    id: country_def.id,
+                    name: country_def.name.clone(),
+                    color: country_def.color,
+                    owned_provinces: country_def.owned_provinces.clone(),
+                    gold: country_def.gold,
+                    flag,
+                    flag_path: country_def.flag_path.clone(),
+                },
+                Relations::default(),
+            ))
             .id();
 
         country_entities.insert(country_def.id, country_entity);
@@ -127,9 +129,9 @@ fn initialize_new_game(
         if let Some(&country_entity) = country_entities.get(&country_def.id) {
             for &province_id in &country_def.owned_provinces {
                 if let Some(&province_entity) = province_map.0.get(&province_id) {
-                    commands
-                        .entity(province_entity)
-                        .insert(OwnedBy{owner:country_entity});
+                    commands.entity(province_entity).insert(OwnedBy {
+                        owner: country_entity,
+                    });
                 }
             }
         }
@@ -181,15 +183,18 @@ fn load_and_apply_save(
             .map(|path| asset_server.load(path.clone()));
 
         let country_entity = commands
-            .spawn((Country {
-                id: country_data.id,
-                name: country_data.name.clone(),
-                color: country_data.color,
-                owned_provinces: country_data.owned_provinces.clone(),
-                gold: country_data.gold,
-                flag,
-                flag_path: country_data.flag_path.clone(),
-            },Relations::default(),))
+            .spawn((
+                Country {
+                    id: country_data.id,
+                    name: country_data.name.clone(),
+                    color: country_data.color,
+                    owned_provinces: country_data.owned_provinces.clone(),
+                    gold: country_data.gold,
+                    flag,
+                    flag_path: country_data.flag_path.clone(),
+                },
+                Relations::default(),
+            ))
             .id();
 
         country_entities.insert(country_data.id, country_entity);
@@ -206,9 +211,9 @@ fn load_and_apply_save(
                 .get(&province_id)
                 .with_context(|| format!("Province {} not found in map", province_id))?;
 
-            commands
-                .entity(province_entity)
-                .insert(OwnedBy{owner:country_entity});
+            commands.entity(province_entity).insert(OwnedBy {
+                owner: country_entity,
+            });
         }
     }
 
@@ -324,8 +329,7 @@ fn load_save_file(path: &str) -> Result<SaveData> {
 }
 
 fn load_countries_from_file() -> Result<Vec<CountryDef>> {
-    let file =
-        std::fs::read_to_string("assets/data/countries.ron")?;
-    
+    let file = std::fs::read_to_string("assets/data/countries.ron")?;
+
     ron::from_str(&file).context("Failed to parse countries.ron")
 }

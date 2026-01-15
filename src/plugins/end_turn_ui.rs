@@ -25,7 +25,7 @@ fn end_turn_ui(
     };
 
     egui::Window::new("Turn Controls")
-        .anchor(egui::Align2::RIGHT_BOTTOM, [-20.0, -20.0])  // padding from right/bottom edges
+        .anchor(egui::Align2::RIGHT_BOTTOM, [-20.0, -20.0]) // padding from right/bottom edges
         .resizable(false)
         .collapsible(false)
         .title_bar(true)
@@ -33,8 +33,12 @@ fn end_turn_ui(
         .show(ctx, |ui| {
             ui.vertical_centered(|ui| {
                 let phase_text = match game_phase.get() {
-                    GamePhase::PlayerTurn => egui::RichText::new("Your Turn").color(egui::Color32::LIGHT_GREEN),
-                    GamePhase::Processing => egui::RichText::new("Processing...").color(egui::Color32::LIGHT_BLUE),
+                    GamePhase::PlayerTurn => {
+                        egui::RichText::new("Your Turn").color(egui::Color32::LIGHT_GREEN)
+                    }
+                    GamePhase::Processing => {
+                        egui::RichText::new("Processing...").color(egui::Color32::LIGHT_BLUE)
+                    }
                 };
                 ui.label(phase_text);
 

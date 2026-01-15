@@ -54,7 +54,7 @@ fn province_building_ui(
 
         egui::Window::new("Build in Province")
             .resizable(false)
-            .anchor(egui::Align2::LEFT_BOTTOM, [10.0, -170.0])
+            .anchor(egui::Align2::LEFT_BOTTOM, [280.0, -10.0])
             .pivot(egui::Align2::LEFT_BOTTOM)
             .show(ctx, |ui| {
                 ui.label("Available Buildings:");
@@ -65,7 +65,7 @@ fn province_building_ui(
                     }
 
                     let cost = building_type.cost();
-                    let can_afford = player_country.gold >= cost;
+                    let can_afford = player_country.gold >= cost as u64;
 
                     ui.horizontal(|ui| {
                         ui.label(format!(
@@ -75,7 +75,7 @@ fn province_building_ui(
                             building_type.description()
                         ));
                         if ui.button("Build").clicked() && can_afford {
-                            player_country.gold -= cost;
+                            player_country.gold -= cost as u64;
                             buildings.built.push(building_type);
                         }
                     });
@@ -96,7 +96,6 @@ fn province_building_ui(
                                     province: province_entity,
                                     units: 100,
                                 },
-                                // Proper spatial bundle
                                 Transform::from_xyz(province.center.x, 0.0, province.center.y),
                                 GlobalTransform::default(),
                                 Visibility::Visible,
@@ -104,9 +103,6 @@ fn province_building_ui(
                                 ViewVisibility::default(),
                             ))
                             .id();
-
-                        // println!("Recruited army in province {}", province.id);
-                        // println!("Army ID: {}", army_entity);
                     }
                 }
             });

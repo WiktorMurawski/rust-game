@@ -85,9 +85,9 @@ fn update_changed_province_colors(
                     if let Ok(occ_country) = countries.get(occupied.occupier) {
                         match occ_country.color {
                             Color::Srgba(s) => Color::srgba(
-                                (s.red   * 0.65 + 0.12).clamp(0.0, 1.0),
+                                (s.red * 0.65 + 0.12).clamp(0.0, 1.0),
                                 (s.green * 0.55).clamp(0.0, 1.0),
-                                (s.blue  * 0.55).clamp(0.0, 1.0),
+                                (s.blue * 0.55).clamp(0.0, 1.0),
                                 s.alpha,
                             ),
                             // Fallback: use original color if not in Srgba space

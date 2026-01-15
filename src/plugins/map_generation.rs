@@ -1,9 +1,9 @@
 // plugins/map_generation.rs
-use anyhow::Context;
 use crate::components::buildings::Buildings;
 use crate::components::province::*;
 use crate::resources::MapSize;
 use crate::states::AppState;
+use anyhow::Context;
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 use earcutr::earcut;
@@ -35,7 +35,7 @@ fn load_map_geometry(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let map_data = match load_map_data_from_file(){
+    let map_data = match load_map_data_from_file() {
         Ok(x) => x,
         Err(err) => {
             eprintln!("Couldn't load map data from file: {:?}", err);
@@ -113,7 +113,7 @@ fn generate_provinces(province_defs: &[ProvinceDef], map_size: Vec2) -> Vec<Prov
         .map(|p| Vec2::new(p.center.0, p.center.1))
         .collect();
 
-    let voronoi_diagram = match build_voronoi(&province_centers, map_size){
+    let voronoi_diagram = match build_voronoi(&province_centers, map_size) {
         Some(x) => x,
         None => {
             eprintln!("Couldn't build voronoi diagram");
@@ -136,6 +136,9 @@ fn generate_provinces(province_defs: &[ProvinceDef], map_size: Vec2) -> Vec<Prov
                 .iter()
                 .map(|&neighbor_cell_idx| province_defs[neighbor_cell_idx].id)
                 .collect(),
+            population: prov_def.population,
+            base_growth: prov_def.base_growth,
+            base_income: prov_def.base_income,
         })
         .collect()
 }

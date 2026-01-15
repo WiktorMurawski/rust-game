@@ -1,11 +1,11 @@
-use bevy::ecs::system::SystemParam;
-use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
-use crate::components::country::{Country, Relations, Relation, DiplomacyChanged};
+use crate::components::country::{Country, DiplomacyChanged, Relation, Relations};
 use crate::components::player::{ControlsCountry, LocalPlayer};
+use crate::components::province::{Occupied, OwnedBy};
 use crate::plugins::selection::{CurrentSelection, SelectedEntity};
 use crate::states::AppState;
-use crate::components::province::{Occupied, OwnedBy};
+use bevy::ecs::system::SystemParam;
+use bevy::prelude::*;
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 pub struct DiplomacyPlugin;
 
@@ -13,12 +13,10 @@ impl Plugin for DiplomacyPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Messages::<DiplomacyChanged>::default())
             .add_systems(
-            EguiPrimaryContextPass,
-            diplomacy_window.run_if(in_state(AppState::InGame)),
-        )
-        .add_observer(
-            on_peace_transfer_occupations
-        );
+                EguiPrimaryContextPass,
+                diplomacy_window.run_if(in_state(AppState::InGame)),
+            )
+            .add_observer(on_peace_transfer_occupations);
     }
 }
 
@@ -44,16 +42,17 @@ fn on_peace_transfer_occupations(
         }
 
         if let Ok(occupier_rels) = relations.get(occupier)
-            && occupier_rels.get(owned_by.owner) == Relation::Peace {
-                let old_owner = owned_by.owner;
-                owned_by.owner = occupier;
-                commands.entity(prov_entity).remove::<Occupied>();
+            && occupier_rels.get(owned_by.owner) == Relation::Peace
+        {
+            let old_owner = owned_by.owner;
+            owned_by.owner = occupier;
+            commands.entity(prov_entity).remove::<Occupied>();
 
-                println!(
-                    "Immediate peace transfer: Province {:?} from {:?} to occupier {:?}",
-                    prov_entity, old_owner, occupier
-                );
-            }
+            println!(
+                "Immediate peace transfer: Province {:?} from {:?} to occupier {:?}",
+                prov_entity, old_owner, occupier
+            );
+        }
     }
 }
 
@@ -72,7 +71,10 @@ fn diplomacy_window(
     local_player: Res<LocalPlayer>,
     player_controls: Query<&ControlsCountry>,
 ) {
-    let (mut commands, mut contexts) = (commands_and_contexts.commands, commands_and_contexts.contexts);
+    let (mut commands, mut contexts) = (
+        commands_and_contexts.commands,
+        commands_and_contexts.contexts,
+    );
 
     let ctx = match contexts.ctx_mut() {
         Ok(ctx) => ctx,
@@ -80,18 +82,27 @@ fn diplomacy_window(
     };
 
     // Only when a province is selected
-    let SelectedEntity::Province(selected_province) = current_selection.entity.unwrap_or(SelectedEntity::Province(Entity::PLACEHOLDER)) else {
+    let SelectedEntity::Province(selected_province) = current_selection
+        .entity
+        .unwrap_or(SelectedEntity::Province(Entity::PLACEHOLDER))
+    else {
         return;
     };
 
-    let Ok(owned_by) = provinces.get(selected_province) else { return };
+    let Ok(owned_by) = provinces.get(selected_province) else {
+        return;
+    };
     let selected_country_entity = owned_by.owner;
 
-    let Ok(selected_country) = countries.get(selected_country_entity) else { return };
+    let Ok(selected_country) = countries.get(selected_country_entity) else {
+        return;
+    };
 
     // Player's controlled country
     let player_entity = local_player.0;
-    let Ok(player_control) = player_controls.get(player_entity) else { return };
+    let Ok(player_control) = player_controls.get(player_entity) else {
+        return;
+    };
     let player_country_entity = player_control.0;
 
     if selected_country_entity == player_country_entity {
@@ -113,8 +124,10 @@ fn diplomacy_window(
                     let current = player_relations.get(selected_country_entity);
 
                     let status_text = match current {
-                        Relation::Peace => egui::RichText::new("Peace").color(egui::Color32::LIGHT_GREEN),
-                        Relation::War   => egui::RichText::new("At War").color(egui::Color32::RED),
+                        Relation::Peace => {
+                            egui::RichText::new("Peace").color(egui::Color32::LIGHT_GREEN)
+                        }
+                        Relation::War => egui::RichText::new("At War").color(egui::Color32::RED),
                     };
 
                     ui.label(status_text);
@@ -122,12 +135,12 @@ fn diplomacy_window(
 
                     let button_text = match current {
                         Relation::Peace => "Declare War",
-                        Relation::War   => "Propose Peace",
+                        Relation::War => "Propose Peace",
                     };
 
                     let button_color = match current {
                         Relation::Peace => egui::Color32::from_rgb(180, 40, 40),
-                        Relation::War   => egui::Color32::from_rgb(60, 140, 60),
+                        Relation::War => egui::Color32::from_rgb(60, 140, 60),
                     };
 
                     // Now the button works normally
@@ -137,13 +150,15 @@ fn diplomacy_window(
                     {
                         let new_relation = match current {
                             Relation::Peace => Relation::War,
-                            Relation::War   => Relation::Peace,
+                            Relation::War => Relation::Peace,
                         };
 
                         player_relations.set(selected_country_entity, new_relation);
 
                         // Mirror relation (symmetric diplomacy - recommended)
-                        if let Ok(mut target_relations) = relations_q.get_mut(selected_country_entity) {
+                        if let Ok(mut target_relations) =
+                            relations_q.get_mut(selected_country_entity)
+                        {
                             target_relations.set(player_country_entity, new_relation);
                         }
 

@@ -10,6 +10,10 @@ pub struct Province {
     pub terrain: TerrainType,
     pub polygon: Vec<Vec2>,
     pub neighbors: HashSet<u32>,
+
+    pub population: u32,
+    pub base_growth: f32,
+    pub base_income: u32,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -17,6 +21,10 @@ pub struct ProvinceDef {
     pub id: u32,
     pub center: (f32, f32),
     pub terrain: TerrainType,
+
+    pub population: u32,
+    pub base_growth: f32,
+    pub base_income: u32,
 }
 
 #[derive(Component)]
@@ -25,12 +33,14 @@ pub struct ProvinceBorder {
 }
 
 #[derive(Component)]
-pub struct OwnedBy{
+pub struct OwnedBy {
     pub owner: Entity,
 }
 
 impl OwnedBy {
-    pub fn owner(&self) -> Entity { self.owner }
+    pub fn owner(&self) -> Entity {
+        self.owner
+    }
 }
 
 #[derive(Component)]
@@ -39,7 +49,9 @@ pub struct Occupied {
 }
 
 impl Occupied {
-    pub fn occupier(&self) -> Entity { self.occupier }
+    pub fn occupier(&self) -> Entity {
+        self.occupier
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]

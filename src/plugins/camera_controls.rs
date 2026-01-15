@@ -3,7 +3,6 @@ use crate::states::AppState;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 
-// In your camera plugin:
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CameraSetup;
 
@@ -50,8 +49,6 @@ fn camera_keyboard_controls(
 
     let mut speed = 300.0 * time.delta_secs();
 
-    // Calculate forward and right directions based on camera orientation
-    // but only in the XZ plane (ignore Y component for movement)
     let forward = camera.forward();
     let forward_xz = Vec3::new(forward.x, 0.0, forward.z).normalize();
     let right_xz = Vec3::new(forward.z, 0.0, -forward.x).normalize();
@@ -60,7 +57,6 @@ fn camera_keyboard_controls(
         speed *= 2.0;
     }
 
-    // WASD movement
     if keyboard.pressed(KeyCode::KeyW) {
         camera.translation += forward_xz * speed;
     }
@@ -73,12 +69,6 @@ fn camera_keyboard_controls(
     if keyboard.pressed(KeyCode::KeyD) {
         camera.translation -= right_xz * speed;
     }
-
-    //camera.translation.x = camera
-    //    .translation
-    //    .x
-    //    .clamp(-400.0 - map_size.0.x, map_size.0.x - 400.0);
-    //camera.translation.z = camera.translation.z.clamp(-map_size.0.y, map_size.0.y);
 }
 
 fn camera_scroll_controls(
@@ -101,19 +91,13 @@ fn camera_scroll_controls(
         let new_height = (current_height - zoom_amount).clamp(MIN_Y, MAX_Y);
         camera.translation.y = new_height;
 
-        // Calculate rotation based on zoom level (0.0 = closest, 1.0 = furthest)
         let zoom_factor = (new_height - MIN_Y) / (MAX_Y - MIN_Y);
 
-        // Camera Rotation
         let rotation_degrees = MIN_ANGLE + (zoom_factor * (MAX_ANGLE - MIN_ANGLE));
         let rotation_radians = rotation_degrees.to_radians();
-
-        //println!("Camera rotation before: {}", camera.rotation);
 
         let desired_pitch = -rotation_radians;
         let (yaw, _current_pitch, roll) = camera.rotation.to_euler(EulerRot::YXZ);
         camera.rotation = Quat::from_euler(EulerRot::YXZ, yaw, desired_pitch, roll);
-
-        //println!("Camera rotation after:  {}", camera.rotation);
     }
 }

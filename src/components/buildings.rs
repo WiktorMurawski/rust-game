@@ -1,3 +1,4 @@
+// components/buildings.rs
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -37,9 +38,32 @@ impl BuildingType {
             BuildingType::Barracks => "Allows recruiting troops",
         }
     }
+
+    pub fn income_bonus(&self) -> u32 {
+        match self {
+            BuildingType::Farm => 0,
+            BuildingType::Mine => 10,
+            BuildingType::Barracks => 0,
+        }
+    }
+
+    pub fn growth_bonus(&self) -> f32 {
+        match self {
+            BuildingType::Farm => 0.01,
+            BuildingType::Mine => 0.0,
+            BuildingType::Barracks => 0.0,
+        }
+    }
+
+    pub fn population_bonus(&self) -> u32 {
+        match self {
+            BuildingType::Farm => 500,
+            BuildingType::Mine => 0,
+            BuildingType::Barracks => 0,
+        }
+    }
 }
 
-// All possible buildings (for UI listing)
 pub const ALL_BUILDINGS: [BuildingType; 3] = [
     BuildingType::Farm,
     BuildingType::Mine,
