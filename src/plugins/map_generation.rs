@@ -233,28 +233,21 @@ fn polygon_to_border_mesh(polygon: &[Vec2], thickness: f32) -> Mesh {
     let mut positions = Vec::new();
     let mut indices = Vec::new();
 
-    // Create thick lines by building quads for each edge
     for i in 0..polygon.len() {
         let next_i = (i + 1) % polygon.len();
         let p1 = polygon[i];
         let p2 = polygon[next_i];
 
-        // Calculate edge
         let edge = p2 - p1;
         let edge_length = edge.length();
 
-        // Skip degenerate edges (too short)
         if edge_length < 0.01 {
             continue;
         }
 
-        // Now safe to normalize
         let edge_normalized = edge / edge_length;
-        // Perpendicular pointing inward (we'll use negative to go inward)
         let perpendicular = Vec2::new(-edge_normalized.y, edge_normalized.x);
 
-        // Four corners of the quad - border entirely on the INSIDE of the polygon
-        // This prevents overlapping with neighbor borders
         let v1 = p1; // Edge point
         let v2 = p1 - perpendicular * thickness; // Inward from edge
         let v3 = p2 - perpendicular * thickness; // Inward from edge
@@ -262,13 +255,11 @@ fn polygon_to_border_mesh(polygon: &[Vec2], thickness: f32) -> Mesh {
 
         let base = positions.len() as u32;
 
-        // Add positions (elevated above provinces)
-        positions.push([v1.x, 0.02, v1.y]);
-        positions.push([v2.x, 0.02, v2.y]);
-        positions.push([v3.x, 0.02, v3.y]);
-        positions.push([v4.x, 0.02, v4.y]);
+        positions.push([v1.x, 0.01, v1.y]);
+        positions.push([v2.x, 0.01, v2.y]);
+        positions.push([v3.x, 0.01, v3.y]);
+        positions.push([v4.x, 0.01, v4.y]);
 
-        // Two triangles for the quad
         indices.extend_from_slice(&[base, base + 1, base + 2, base, base + 2, base + 3]);
     }
 

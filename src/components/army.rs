@@ -21,3 +21,11 @@ pub struct ArmySelected;
 pub struct ArmyUnitLabel {
     pub army: Entity,
 }
+
+#[derive(Component, Default)]
+pub struct HasActedThisTurn;
+
+#[derive(Component, Debug)]
+pub struct PendingMove {
+    pub target_province: Entity,
+}

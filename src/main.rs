@@ -9,7 +9,7 @@ fn main() {
         .add_plugins(EguiPlugin::default())
         .add_plugins(GameSystems)
         .add_plugins(Text3dPlugin {
-            default_atlas_dimension: (1024, 1024),
+            default_atlas_dimension: (1024,1024),
             load_system_fonts: true,
             ..Default::default()
         })

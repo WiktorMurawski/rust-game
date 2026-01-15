@@ -1,3 +1,4 @@
+// plugins/buildings_ui.rs
 use crate::components::army::Army;
 use crate::components::buildings::{ALL_BUILDINGS, BuildingType, Buildings};
 use crate::components::country::*;
@@ -88,21 +89,24 @@ fn province_building_ui(
                     {
                         player_country.gold -= 100;
 
-                        commands.spawn((
-                            Army {
-                                owner: owned_by.0,
-                                province: province_entity,
-                                units: 100,
-                            },
-                            // Proper spatial bundle
-                            Transform::from_xyz(province.center.x, 0.0, province.center.y),
-                            GlobalTransform::default(),
-                            Visibility::Visible,
-                            InheritedVisibility::default(),
-                            ViewVisibility::default(),
-                        ));
+                        let army_entity = commands
+                            .spawn((
+                                Army {
+                                    owner: owned_by.0,
+                                    province: province_entity,
+                                    units: 100,
+                                },
+                                // Proper spatial bundle
+                                Transform::from_xyz(province.center.x, 0.0, province.center.y),
+                                GlobalTransform::default(),
+                                Visibility::Visible,
+                                InheritedVisibility::default(),
+                                ViewVisibility::default(),
+                            ))
+                            .id();
 
                         println!("Recruited army in province {}", province.id);
+                        println!("Army ID: {}", army_entity);
                     }
                 }
             });

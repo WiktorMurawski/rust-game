@@ -1,6 +1,6 @@
-use crate::plugins::map_generation::{MapGenerated, MapGenerationPlugin};
+use crate::plugins::map_generation::MapGenerationPlugin;
 use crate::plugins::*;
-use crate::states::AppState;
+use crate::states::{AppState, GamePhase, PendingMoves};
 use bevy::ecs::query::QueryFilter;
 use bevy::prelude::*;
 
@@ -9,6 +9,9 @@ pub struct GameSystems;
 impl Plugin for GameSystems {
     fn build(&self, app: &mut App) {
         app.init_state::<AppState>()
+            .init_state::<GamePhase>()
+            .insert_resource(PendingMoves::default())
+            // .insert_resource(GameTurn::default())
             .insert_resource(ClearColor(Color::srgb_u8(30, 30, 30)))
             .add_systems(Startup, setup)
             .add_systems(OnEnter(AppState::InGame), clear_cameras)
@@ -28,7 +31,8 @@ impl Plugin for GameSystems {
             .add_plugins(ProvinceInfoUI)
             .add_plugins(PlayerCountryUI)
             .add_plugins(BuildingsUI)
-            .add_plugins(ArmyRendering);
+            .add_plugins(ArmyRendering)
+            .add_plugins(EndTurnUI);
     }
 }
 

@@ -1,3 +1,4 @@
+// plugins/army_systems.rs
 use crate::components::army::Army;
 use crate::states::AppState;
 use bevy::prelude::*;
@@ -7,7 +8,7 @@ pub struct ArmySystemsPlugin;
 impl Plugin for ArmySystemsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Update,
+            PostUpdate,
             merge_armies_in_same_province.run_if(in_state(AppState::InGame)),
         );
     }

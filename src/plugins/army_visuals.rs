@@ -1,7 +1,9 @@
+// plugins/army_visuals.rs
 use crate::components::army::Army;
+use crate::components::province::Province;
 use crate::states::AppState;
 use bevy::prelude::*;
-use bevy_rich_text3d::Text3d;
+use bevy_rich_text3d::{Text3d, TextAtlas};
 
 pub struct ArmyRendering;
 
@@ -9,7 +11,13 @@ impl Plugin for ArmyRendering {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (render_armies, billboard_text, update_army_labels).run_if(in_state(AppState::InGame)),
+            (
+                render_armies,
+                billboard_text,
+                update_army_labels,
+                update_army_positions,
+            )
+                .run_if(in_state(AppState::InGame)),
         );
     }
 }
@@ -19,6 +27,17 @@ struct ArmyLabel;
 
 #[derive(Component)]
 struct ArmyModel;
+
+fn update_army_positions(
+    mut armies: Query<(&Army, &mut Transform), Changed<Army>>,
+    provinces: Query<&Province>,
+) {
+    for (army, mut transform) in &mut armies {
+        if let Ok(province) = provinces.get(army.province) {
+            transform.translation = Vec3::new(province.center.x, 0.0, province.center.y);
+        }
+    }
+}
 
 fn update_army_labels(
     mut labels: Query<(&mut Text3d, &ChildOf), With<ArmyLabel>>,
@@ -47,6 +66,7 @@ fn render_armies(
     // provinces: Query<&Province>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    // asset_server: &Res<AssetServer>,
 ) {
     for (army_entity, army) in &armies {
         commands.entity(army_entity).with_children(|parent| {
@@ -66,7 +86,7 @@ fn render_armies(
                 Text3d::new(format!("{}", army.units)),
                 Mesh3d::default(),
                 MeshMaterial3d(materials.add(StandardMaterial {
-                    base_color_texture: Some(bevy_rich_text3d::TextAtlas::DEFAULT_IMAGE.clone()),
+                    base_color_texture: Some(TextAtlas::DEFAULT_IMAGE.clone()),
                     alpha_mode: AlphaMode::Blend,
                     unlit: true,
                     ..default()
