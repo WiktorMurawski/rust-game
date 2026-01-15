@@ -9,10 +9,6 @@ pub enum GamePhase {
     // Later: EnemyTurn, EndOfTurn, etc.
 }
 
-// Per-army "has this army acted this turn?"
-#[derive(Component, Default)]
-pub struct HasActedThisTurn;
-
 // Resource to track pending moves
 #[derive(Resource, Default)]
 pub struct PendingMoves {

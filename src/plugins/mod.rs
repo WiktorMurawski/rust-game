@@ -16,6 +16,7 @@ mod save_load;
 mod selection;
 mod setup_egui_camera;
 mod terrain_visual_3d;
+mod turn;
 
 pub use army_movement::ArmyMovementPlugin;
 pub use army_systems::ArmySystemsPlugin;
@@ -35,3 +36,4 @@ pub use save_load::SaveLoadPlugin;
 pub use selection::SelectionPlugin;
 pub use setup_egui_camera::SetupEguiCamera;
 pub use terrain_visual_3d::Terrain3DVisualsPlugin;
+pub use turn::TurnPlugin;

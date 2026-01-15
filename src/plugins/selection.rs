@@ -2,10 +2,10 @@ use crate::components::army::Army;
 use crate::resources::MapSize;
 use crate::{components::province::Province, states::AppState};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::Vec2;
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::prelude::*;
 use bevy_egui::EguiContexts;
 use std::cmp::Ordering;
+use crate::misc::{mouse_to_world_coords, squared_distance, MouseAndWindowAndCamera};
 
 pub struct SelectionPlugin;
 
@@ -44,13 +44,6 @@ pub enum SelectedEntity {
 //    println!("Current selection: {:?}", current_selection);
 //    selected_entities.iter().for_each(|e| println!("{:?}", e));
 // }
-
-#[derive(SystemParam)]
-struct MouseAndWindowAndCamera<'w, 's> {
-    mouse: Res<'w, ButtonInput<MouseButton>>,
-    window: Query<'w, 's, &'static Window, With<PrimaryWindow>>,
-    camera: Query<'w, 's, (&'static Camera, &'static GlobalTransform)>,
-}
 
 #[derive(SystemParam)]
 struct SelectionParams<'w, 's> {
@@ -150,35 +143,4 @@ fn update_selection(
         commands.entity(province_entity).insert(Selected);
         current_selection.entity = Some(SelectedEntity::Province(province_entity));
     }
-}
-
-fn squared_distance(a: Vec2, b: Vec2) -> f32 {
-    (a.x - b.x).powi(2) + (a.y - b.y).powi(2)
-}
-
-fn mouse_to_world_coords(
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    camera_query: Query<(&Camera, &GlobalTransform)>,
-) -> Option<Vec2> {
-    let window = window_query.single().ok()?;
-    let (camera, cam_tf) = camera_query.single().ok()?;
-
-    let cursor_pos = window.cursor_position()?;
-
-    let Ok(ray) = camera.viewport_to_world(cam_tf, cursor_pos) else {
-        return None;
-    };
-
-    let plane_origin = Vec3::ZERO;
-    let plane_normal = Vec3::Y;
-
-    let distance = ray.intersect_plane(plane_origin, InfinitePlane3d::new(plane_normal))?;
-
-    if distance <= 0.0 {
-        return None;
-    }
-
-    let point = ray.get_point(distance);
-
-    Some(point.xz())
 }

@@ -24,6 +24,8 @@ impl Plugin for GameSystems {
             .add_plugins(SelectionPlugin)
             .add_plugins(SaveLoadPlugin)
             .add_plugins(ArmySystemsPlugin)
+            .add_plugins(ArmyMovementPlugin)
+            .add_plugins(TurnPlugin)
             // UI
             .add_plugins(SetupEguiCamera)
             .add_plugins(MainMenu)

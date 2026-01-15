@@ -24,7 +24,7 @@ pub fn spawn_3d_objects(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    println!("spawn_3d_objects");
+    // println!("spawn_3d_objects");
 
     for (entity, province) in query {
         match province.terrain {

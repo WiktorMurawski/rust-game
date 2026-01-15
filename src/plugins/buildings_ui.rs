@@ -89,7 +89,7 @@ fn province_building_ui(
                     {
                         player_country.gold -= 100;
 
-                        let army_entity = commands
+                        let _army_entity = commands
                             .spawn((
                                 Army {
                                     owner: owned_by.0,
@@ -105,8 +105,8 @@ fn province_building_ui(
                             ))
                             .id();
 
-                        println!("Recruited army in province {}", province.id);
-                        println!("Army ID: {}", army_entity);
+                        // println!("Recruited army in province {}", province.id);
+                        // println!("Army ID: {}", army_entity);
                     }
                 }
             });

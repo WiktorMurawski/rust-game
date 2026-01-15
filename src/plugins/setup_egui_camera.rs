@@ -20,6 +20,6 @@ fn setup_egui_camera(
 ) {
     for camera_entity in cameras.iter() {
         commands.entity(camera_entity).insert(PrimaryEguiContext);
-        println!("Added PrimaryEguiContext to camera");
+        // println!("Added PrimaryEguiContext to camera");
     }
 }
