@@ -1,8 +1,8 @@
 use crate::components::buildings::Buildings;
 use crate::components::country::*;
 use crate::components::province::*;
+use crate::plugins::selection::CurrentSelection;
 use crate::plugins::selection::SelectedEntity;
-use crate::plugins::selection::{CurrentSelection};
 use crate::states::AppState;
 use bevy::app::Plugin;
 use bevy::prelude::*;
@@ -46,7 +46,6 @@ fn province_info_ui(
                         province.center.x, province.center.y
                     ));
 
-                    // Owner
                     if let Some(owner) = owner_opt {
                         if let Ok(country) = countries.get(owner.owner) {
                             ui.label(format!("Owner: {}", country.name));
@@ -57,7 +56,6 @@ fn province_info_ui(
                         ui.label("Owner: None (unclaimed)");
                     }
 
-                    // Occupation status
                     if let Some(occupied) = occupied_opt {
                         if let Ok(occ_country) = countries.get(occupied.occupier) {
                             ui.colored_label(
@@ -71,7 +69,6 @@ fn province_info_ui(
 
                     ui.separator();
 
-                    // Population & growth
                     ui.label(format!("Population: {}", province.population));
                     ui.label(format!(
                         "Growth per turn: +{:.1}% ({:+} people)",
@@ -79,7 +76,6 @@ fn province_info_ui(
                         (province.population as f32 * province.base_growth).round() as i32
                     ));
 
-                    // Buildings summary
                     if !buildings.built.is_empty() {
                         ui.label("Buildings:");
                         for &b in &buildings.built {
@@ -91,20 +87,16 @@ fn province_info_ui(
 
                     ui.separator();
 
-                    // Income calculation (same logic as in your economy system)
                     let mut income = province.base_income as f32;
 
-                    // Building bonuses
                     for &building in &buildings.built {
                         income += building.income_bonus() as f32;
                     }
 
-                    // Simple population contribution (e.g. 1 gold per 1000 people)
                     income += (province.population / 1000) as f32;
 
-                    // Occupation penalty (optional)
                     if occupied_opt.is_some() {
-                        income *= 0.6; // e.g. 60% income when occupied
+                        income *= 0.6;
                         ui.label("Occupied: income reduced");
                     }
 
@@ -124,47 +116,3 @@ fn province_info_ui(
             }
         });
 }
-
-// fn province_info_ui(
-//     mut contexts: EguiContexts,
-//     selection: Res<CurrentSelection>,
-//     provinces: Query<(&Province, Option<&OwnedBy>), With<Selected>>,
-//     countries: Query<&Country>,
-// ) {
-//     let Ok(ctx) = contexts.ctx_mut() else {
-//         return;
-//     };
-//
-//     egui::Window::new("Province Info")
-//         .default_pos([10.0, 10.0])
-//         .anchor(egui::Align2::LEFT_BOTTOM, [10.0, -10.0])
-//         .resizable(false)
-//         .default_size([200.0, 300.0])
-//         .show(ctx, |ui| {
-//             // Match on the SelectedEntity enum
-//             if let Some(SelectedEntity::Province(entity)) = selection.entity {
-//                 if let Ok((province, owner)) = provinces.get(entity) {
-//                     ui.label(format!("ID: {}", province.id));
-//                     ui.label(format!("Terrain: {:?}", province.terrain));
-//                     ui.label(format!("Center: {:#}", province.center));
-//
-//                     if let Some(owner) = owner {
-//                         if let Ok(country) = countries.get(owner.owner) {
-//                             ui.label(format!("Owner: {}", country.name));
-//                         } else {
-//                             ui.label("Owner: Unknown");
-//                         }
-//                     } else {
-//                         ui.label("Owner: None");
-//                     }
-//
-//                     ui.separator();
-//                     ui.label(format!("Neighbors: {}", province.neighbors.len()));
-//                 } else {
-//                     ui.label("Invalid province selection");
-//                 }
-//             } else {
-//                 ui.label("No province selected");
-//             }
-//         });
-// }

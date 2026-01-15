@@ -1,13 +1,13 @@
 use bevy::platform::collections::HashMap;
 // plugins/turn.rs
 use crate::components::army::{Army, HasActedThisTurn, PendingMove};
-use crate::components::buildings::{BuildingType, Buildings, ALL_BUILDINGS};
+use crate::components::buildings::{ALL_BUILDINGS, BuildingType, Buildings};
 use crate::components::country::{AIControlled, Country, DiplomacyChanged, Relation, Relations};
 use crate::components::province::{Occupied, OwnedBy, Province};
 use crate::states::{AppState, GamePhase};
 use bevy::prelude::*;
-use rand::prelude::IndexedRandom;
 use rand::Rng;
+use rand::prelude::IndexedRandom;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum TurnResolutionSet {
@@ -51,16 +51,16 @@ impl Plugin for TurnPlugin {
             Update,
             process_turn_moves.in_set(TurnResolutionSet::Movement),
         )
-        .add_systems(
-            Update,
-            resolve_combat.in_set(TurnResolutionSet::Combat),
-        )
+        .add_systems(Update, resolve_combat.in_set(TurnResolutionSet::Combat))
         .add_systems(
             Update,
             resolve_occupation.in_set(TurnResolutionSet::Occupation),
         )
         .add_systems(Update, process_economy.in_set(TurnResolutionSet::Economy))
-        .add_systems(Update, crate::misc::empty_function.in_set(TurnResolutionSet::End))
+        .add_systems(
+            Update,
+            crate::misc::empty_function.in_set(TurnResolutionSet::End),
+        )
         .add_systems(
             Update,
             finish_processing
@@ -81,17 +81,15 @@ fn process_turn_moves(
     }
 }
 
-fn resolve_combat(
-    mut commands: Commands,
-    armies: Query<(Entity, &Army)>,
-) {
+fn resolve_combat(mut commands: Commands, armies: Query<(Entity, &Army)>) {
     let mut province_armies: HashMap<Entity, Vec<(Entity, Entity, u32)>> = HashMap::new();
 
     for (army_entity, army) in &armies {
-        province_armies
-            .entry(army.province)
-            .or_default()
-            .push((army_entity, army.owner, army.units));
+        province_armies.entry(army.province).or_default().push((
+            army_entity,
+            army.owner,
+            army.units,
+        ));
     }
 
     for (province_entity, armies_in_prov) in province_armies {
@@ -121,16 +119,16 @@ fn resolve_combat(
             }
         }
 
-        if let Some(loser_owner) = weakest_owner {
-            if let Some((_, losing_armies)) = owner_strength.get(&loser_owner) {
-                for &army_entity in losing_armies {
-                    commands.entity(army_entity).despawn();
-                }
-                println!(
-                    "Combat in province {:?}: Owner {:?} ({} units total) LOST → all armies destroyed",
-                    province_entity, loser_owner, weakest_strength
-                );
+        if let Some(loser_owner) = weakest_owner
+            && let Some((_, losing_armies)) = owner_strength.get(&loser_owner)
+        {
+            for &army_entity in losing_armies {
+                commands.entity(army_entity).despawn();
             }
+            println!(
+                "Combat in province {:?}: Owner {:?} lost {} units",
+                province_entity, loser_owner, weakest_strength
+            );
         }
     }
 }
@@ -160,9 +158,7 @@ fn resolve_occupation(
 
         let mut present_owners: Vec<Entity> = armies_here
             .iter()
-            .filter_map(|&army_entity| {
-                armies.get(army_entity).ok().map(|army| army.1.owner)
-            })
+            .filter_map(|&army_entity| armies.get(army_entity).ok().map(|army| army.1.owner))
             .collect();
 
         present_owners.sort();
@@ -181,7 +177,7 @@ fn resolve_occupation(
 
         let occupier = present_owners[0];
 
-        if occupied_opt.map_or(true, |o| o.occupier != occupier) {
+        if occupied_opt.is_none_or(|o| o.occupier != occupier) {
             commands.entity(prov_entity).insert(Occupied { occupier });
         }
     }
@@ -258,7 +254,6 @@ fn ai_build_buildings(
     let mut rng = rand::rng();
 
     for (country_entity, mut country) in &mut ai_countries {
-        // Which buildings can we afford?
         let affordable: Vec<BuildingType> = ALL_BUILDINGS
             .into_iter()
             .filter(|&b| country.gold >= b.cost())
@@ -268,12 +263,10 @@ fn ai_build_buildings(
             continue;
         }
 
-        // Random choice among affordable (no unwrap needed)
         let Some(choice) = affordable.choose(&mut rng).copied() else {
             continue;
         };
 
-        // Find provinces where we can build it
         let candidates: Vec<Entity> = provinces
             .iter()
             .filter(|(_, owned_by, buildings)| {
@@ -286,7 +279,6 @@ fn ai_build_buildings(
             continue;
         }
 
-        // Pick random province
         let chosen_prov = candidates[rng.random_range(0..candidates.len())];
 
         if let Ok(mut buildings) = provinces.get_mut(chosen_prov).map(|(_, _, b)| b) {
@@ -299,7 +291,7 @@ fn ai_build_buildings(
 fn ai_recruit_armies(
     mut commands: Commands,
     mut ai_countries: Query<(Entity, &mut Country), With<AIControlled>>,
-    provinces: Query<(Entity, &Province, &OwnedBy, &Buildings)>,  // ← add &Province here
+    provinces: Query<(Entity, &Province, &OwnedBy, &Buildings)>, // ← add &Province here
 ) {
     let mut rng = rand::rng();
 
@@ -308,7 +300,6 @@ fn ai_recruit_armies(
             continue;
         }
 
-        // Find barracks provinces with full data
         let barracks_provinces: Vec<(Entity, &Province)> = provinces
             .iter()
             .filter(|(_, _, owned_by, buildings)| {
@@ -322,8 +313,8 @@ fn ai_recruit_armies(
             continue;
         }
 
-        // Pick one random barracks province
-        let (prov_entity, province) = barracks_provinces[rng.random_range(0..barracks_provinces.len())];
+        let (prov_entity, province) =
+            barracks_provinces[rng.random_range(0..barracks_provinces.len())];
 
         commands.spawn((
             Army {
@@ -363,12 +354,18 @@ fn ai_move_armies(
                 continue;
             }
 
-            let Ok((_, current_prov, _)) = provinces.get(army.province) else { continue };
+            let Ok((_, current_prov, _)) = provinces.get(army.province) else {
+                continue;
+            };
 
-            let all_targets: Vec<(Entity, Entity)> = current_prov.neighbors
+            let all_targets: Vec<(Entity, Entity)> = current_prov
+                .neighbors
                 .iter()
                 .filter_map(|&nid| {
-                    provinces.iter().find(|(_e, p, _o)| p.id == nid).map(|(e, _, o)| (e, o.owner))
+                    provinces
+                        .iter()
+                        .find(|(_e, p, _o)| p.id == nid)
+                        .map(|(e, _, o)| (e, o.owner))
                 })
                 .collect();
 
@@ -380,7 +377,8 @@ fn ai_move_armies(
                 .iter()
                 .filter(|(_, owner)| *owner != country_entity)
                 .filter(|(_, owner)| {
-                    relations.get(country_entity)
+                    relations
+                        .get(country_entity)
                         .is_ok_and(|r| r.get(*owner) == Relation::War)
                 })
                 .map(|(e, _)| *e)
@@ -406,13 +404,16 @@ fn ai_move_armies(
                 continue;
             };
 
-            if pending_moves.get(army_entity).is_ok_and(|p| p.target_province == target_province) {
+            if pending_moves
+                .get(army_entity)
+                .is_ok_and(|p| p.target_province == target_province)
+            {
                 continue;
             }
 
-            commands.entity(army_entity).insert(PendingMove {
-                target_province,
-            });
+            commands
+                .entity(army_entity)
+                .insert(PendingMove { target_province });
         }
     }
 }
@@ -435,7 +436,8 @@ fn ai_declare_war(
             .iter()
             .filter(|&e| e != country_entity)
             .filter(|&e| {
-                relations.get(country_entity)
+                relations
+                    .get(country_entity)
                     .map_or(true, |r| r.get(e) == Relation::Peace)
             })
             .collect();
@@ -446,12 +448,10 @@ fn ai_declare_war(
 
         let target = possible_targets[rng.random_range(0..possible_targets.len())];
 
-        // Update AI's relations
         if let Ok(mut my_rels) = relations.get_mut(country_entity) {
             my_rels.set(target, Relation::War);
         }
 
-        // Update target's relations (symmetric)
         if let Ok(mut target_rels) = relations.get_mut(target) {
             target_rels.set(country_entity, Relation::War);
         }
@@ -462,6 +462,9 @@ fn ai_declare_war(
             new_relation: Relation::War,
         });
 
-        println!("AI country {:?} declared war on {:?}", country_entity, target);
+        println!(
+            "AI country {:?} declared war on {:?}",
+            country_entity, target
+        );
     }
 }

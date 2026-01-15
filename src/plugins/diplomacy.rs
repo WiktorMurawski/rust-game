@@ -1,11 +1,11 @@
 use crate::components::country::{Country, DiplomacyChanged, Relation, Relations};
 use crate::components::player::{ControlsCountry, LocalPlayer};
 use crate::components::province::{Occupied, OwnedBy};
+use crate::misc::CommandsAndContexts;
 use crate::plugins::selection::{CurrentSelection, SelectedEntity};
 use crate::states::AppState;
 use bevy::prelude::*;
 use bevy_egui::{EguiPrimaryContextPass, egui};
-use crate::misc::CommandsAndContexts;
 
 pub struct DiplomacyPlugin;
 
@@ -70,7 +70,6 @@ fn diplomacy_window(
         Err(_) => return,
     };
 
-    // Only when a province is selected
     let SelectedEntity::Province(selected_province) = current_selection
         .entity
         .unwrap_or(SelectedEntity::Province(Entity::PLACEHOLDER))
@@ -87,7 +86,6 @@ fn diplomacy_window(
         return;
     };
 
-    // Player's controlled country
     let player_entity = local_player.0;
     let Ok(player_control) = player_controls.get(player_entity) else {
         return;
@@ -95,7 +93,7 @@ fn diplomacy_window(
     let player_country_entity = player_control.0;
 
     if selected_country_entity == player_country_entity {
-        return; // don't show for own country
+        return;
     }
 
     egui::Window::new(format!("Diplomacy – {}", selected_country.name))
@@ -108,7 +106,6 @@ fn diplomacy_window(
                 ui.heading(&selected_country.name);
                 ui.add_space(8.0);
 
-                // Try to get player's relations (mutable)
                 if let Ok(mut player_relations) = relations_q.get_mut(player_country_entity) {
                     let current = player_relations.get(selected_country_entity);
 
@@ -132,7 +129,6 @@ fn diplomacy_window(
                         Relation::War => egui::Color32::from_rgb(60, 140, 60),
                     };
 
-                    // Now the button works normally
                     if ui
                         .add(egui::Button::new(button_text).fill(button_color))
                         .clicked()
@@ -144,14 +140,12 @@ fn diplomacy_window(
 
                         player_relations.set(selected_country_entity, new_relation);
 
-                        // Mirror relation (symmetric diplomacy - recommended)
                         if let Ok(mut target_relations) =
                             relations_q.get_mut(selected_country_entity)
                         {
                             target_relations.set(player_country_entity, new_relation);
                         }
 
-                        // Trigger event
                         commands.trigger(DiplomacyChanged {
                             declarer: player_country_entity,
                             target: selected_country_entity,

@@ -11,7 +11,6 @@ impl Plugin for GameSystems {
         app.init_state::<AppState>()
             .init_state::<GamePhase>()
             .insert_resource(PendingMoves::default())
-            // .insert_resource(GameTurn::default())
             .insert_resource(ClearColor(Color::srgb_u8(30, 30, 30)))
             .add_systems(Startup, setup)
             .add_systems(OnEnter(AppState::InGame), clear_cameras)

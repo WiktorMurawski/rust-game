@@ -1,10 +1,10 @@
 // plugins/army_visuals.rs
 use crate::components::army::Army;
+use crate::components::country::Country;
 use crate::components::province::Province;
 use crate::states::AppState;
 use bevy::prelude::*;
 use bevy_rich_text3d::{Text3d, TextAtlas};
-use crate::components::country::Country;
 
 pub struct ArmyRendering;
 
@@ -72,7 +72,6 @@ fn render_armies(
 ) {
     for (army_entity, army) in &armies {
         commands.entity(army_entity).with_children(|parent| {
-
             let country_color = countries
                 .get(army.owner)
                 .map(|country| country.color)
@@ -80,9 +79,9 @@ fn render_armies(
 
             let model_color = match country_color {
                 Color::Srgba(s) => Color::srgba(
-                    (s.red   * 0.7).clamp(0.0, 1.0),
+                    (s.red * 0.7).clamp(0.0, 1.0),
                     (s.green * 0.7).clamp(0.0, 1.0),
-                    (s.blue  * 0.7).clamp(0.0, 1.0),
+                    (s.blue * 0.7).clamp(0.0, 1.0),
                     s.alpha,
                 ),
                 _ => country_color,
@@ -90,9 +89,9 @@ fn render_armies(
 
             let label_color = match country_color {
                 Color::Srgba(s) => Color::srgba(
-                    (s.red   * 1.4).clamp(0.0, 1.0),
+                    (s.red * 1.4).clamp(0.0, 1.0),
                     (s.green * 1.4).clamp(0.0, 1.0),
-                    (s.blue  * 1.4).clamp(0.0, 1.0),
+                    (s.blue * 1.4).clamp(0.0, 1.0),
                     s.alpha,
                 ),
                 _ => country_color,

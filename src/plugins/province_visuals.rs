@@ -81,7 +81,6 @@ fn update_changed_province_colors(
 
             MapMode::Political => {
                 if let Some(occupied) = occupied_opt {
-                    // Occupied province → use occupier's color with tint
                     if let Ok(occ_country) = countries.get(occupied.occupier) {
                         match occ_country.color {
                             Color::Srgba(s) => Color::srgba(
@@ -90,15 +89,12 @@ fn update_changed_province_colors(
                                 (s.blue * 0.55).clamp(0.0, 1.0),
                                 s.alpha,
                             ),
-                            // Fallback: use original color if not in Srgba space
                             _ => occ_country.color,
                         }
                     } else {
-                        // Fallback when occupier country not found
                         Color::srgb(0.8, 0.1, 0.1)
                     }
                 } else if let Some(owner) = owner_opt {
-                    // Normal owned province
                     countries
                         .get(owner.owner)
                         .map(|c| c.color)

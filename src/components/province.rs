@@ -70,7 +70,7 @@ impl TerrainType {
             TerrainType::Forest => Color::srgb(0.2, 0.5, 0.2),
             TerrainType::Mountains => Color::srgb(0.5, 0.5, 0.5),
             TerrainType::City => Color::srgb(0.7, 0.7, 0.8),
-            TerrainType::Water => Color::srgb(0.0, 0.0, 1.0),
+            TerrainType::Water => Color::srgb(0.3, 0.3, 0.8),
         }
     }
 }

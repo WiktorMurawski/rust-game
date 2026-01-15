@@ -62,7 +62,7 @@ fn load_map_geometry(
             ..default()
         });
 
-        let border_mesh = polygon_to_border_mesh(&province.polygon, 1.0);
+        let border_mesh = polygon_to_border_mesh(&province.polygon, 0.5);
 
         let province_entity = commands
             .spawn((
@@ -187,7 +187,6 @@ fn calculate_neighbors(voronoi_diagram: &Voronoi) -> Vec<HashSet<usize>> {
         let b = tris[i + 1];
         let c = tris[i + 2];
 
-        // Now add the three neighbor relations
         cell_neighbors[a].insert(b);
         cell_neighbors[a].insert(c);
         cell_neighbors[b].insert(a);
@@ -200,7 +199,6 @@ fn calculate_neighbors(voronoi_diagram: &Voronoi) -> Vec<HashSet<usize>> {
 }
 
 fn polygon_to_mesh(polygon: &[Vec2]) -> Mesh {
-    // Flatten vertices for earcut
     let flattened: Vec<f64> = polygon
         .iter()
         .flat_map(|v| [v.x as f64, v.y as f64])
@@ -258,10 +256,10 @@ fn polygon_to_border_mesh(polygon: &[Vec2], thickness: f32) -> Mesh {
         let edge_normalized = edge / edge_length;
         let perpendicular = Vec2::new(-edge_normalized.y, edge_normalized.x);
 
-        let v1 = p1; // Edge point
-        let v2 = p1 - perpendicular * thickness; // Inward from edge
-        let v3 = p2 - perpendicular * thickness; // Inward from edge
-        let v4 = p2; // Edge point
+        let v1 = p1;
+        let v2 = p1 - perpendicular * thickness;
+        let v3 = p2 - perpendicular * thickness;
+        let v4 = p2;
 
         let base = positions.len() as u32;
 

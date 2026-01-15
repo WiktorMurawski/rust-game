@@ -25,7 +25,7 @@ fn end_turn_ui(
     };
 
     egui::Window::new("Turn Controls")
-        .anchor(egui::Align2::RIGHT_BOTTOM, [-20.0, -20.0]) // padding from right/bottom edges
+        .anchor(egui::Align2::RIGHT_BOTTOM, [-20.0, -20.0])
         .resizable(false)
         .collapsible(false)
         .title_bar(true)

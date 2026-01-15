@@ -52,7 +52,6 @@ pub struct SaveLoadError {
     pub message: Option<String>,
 }
 
-// Helper module for Color serialization
 mod color_serde {
     use bevy::prelude::*;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -120,7 +119,6 @@ fn initialize_new_game(
             Relations::default(),
         ));
 
-        // Mark ALL countries as AI-controlled initially
         builder.insert(AIControlled);
 
         let country_entity = builder.id();
@@ -151,7 +149,6 @@ fn load_saved_game(
     mut error: ResMut<SaveLoadError>,
     asset_server: Res<AssetServer>,
 ) {
-    // Use match with anyhow's Result
     match load_and_apply_save(
         &mut commands,
         &province_map,
@@ -198,7 +195,6 @@ fn load_and_apply_save(
             Relations::default(),
         ));
 
-        // Mark as AI-controlled UNLESS it's the saved player country
         if Some(country_data.id) != save_data.player_country_id {
             builder.insert(AIControlled);
         }

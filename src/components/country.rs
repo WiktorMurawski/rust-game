@@ -1,6 +1,4 @@
 use bevy::platform::collections::HashMap;
-// use std::collections::HashMap;
-// components/country.rs
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -47,7 +45,6 @@ mod color_def {
     }
 }
 
-// Component on Country entities
 #[derive(Component, Default, Clone)]
 pub struct Relations {
     pub relations: HashMap<Entity, Relation>,
@@ -69,7 +66,6 @@ impl Relations {
     }
 }
 
-// Event for diplomacy changes (for reactivity)
 #[derive(Event, Message)]
 pub struct DiplomacyChanged {
     pub declarer: Entity,

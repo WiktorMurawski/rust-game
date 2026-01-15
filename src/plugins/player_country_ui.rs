@@ -71,7 +71,6 @@ fn player_country_panel_with_flag(
             return;
         };
 
-        // Now open the window
         egui::Window::new("player_country")
             .title_bar(false)
             .resizable(false)

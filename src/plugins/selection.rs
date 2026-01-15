@@ -1,12 +1,13 @@
 use crate::components::army::Army;
-use crate::misc::{MouseAndWindowAndCamera, mouse_to_world_coords, squared_distance};
+use crate::components::player::{ControlsCountry, LocalPlayer};
+use crate::misc::{
+    CommandsAndContexts, MouseAndWindowAndCamera, mouse_to_world_coords, squared_distance,
+};
 use crate::resources::MapSize;
 use crate::{components::province::Province, states::AppState};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_egui::EguiContexts;
 use std::cmp::Ordering;
-use crate::components::player::{ControlsCountry, LocalPlayer};
 
 pub struct SelectionPlugin;
 
@@ -20,16 +21,12 @@ impl Plugin for SelectionPlugin {
     }
 }
 
-// Marker component for selected entities
 #[derive(Component)]
 pub struct Selected;
 
-// Resource to track selection state
 #[derive(Resource, Default, Debug)]
 pub struct CurrentSelection {
     pub entity: Option<SelectedEntity>,
-    // Or for multi-select:
-    // pub entities: Vec<Entity>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -52,20 +49,25 @@ struct SelectionParams<'w, 's> {
     selected_query: Query<'w, 's, Entity, With<Selected>>,
 }
 
+#[derive(SystemParam)]
+struct PlayerParams<'w, 's> {
+    local_player: Res<'w, LocalPlayer>,
+    player_controls: Query<'w, 's, &'static ControlsCountry>,
+}
+
 fn update_selection(
-    mut commands: Commands,
-    mut contexts: EguiContexts,
+    commands_and_contexts: CommandsAndContexts,
     province_query: Query<(Entity, &Province)>,
     army_query: Query<(Entity, &Army, &GlobalTransform)>,
     selection_params: SelectionParams,
     map_size: Res<MapSize>,
     mouse_and_window_and_camera: MouseAndWindowAndCamera,
-    local_player: Res<LocalPlayer>,                    // ← added
-    player_controls: Query<&ControlsCountry>,          // ← added
+    player_params: PlayerParams,
+    // local_player: Res<LocalPlayer>,
+    // player_controls: Query<&ControlsCountry>,
 ) {
-    if contexts.ctx_mut().ok().is_some_and(|ctx| ctx.wants_pointer_input()) {
-        return;
-    }
+    let mut commands = commands_and_contexts.commands;
+    let mut contexts = commands_and_contexts.contexts;
 
     let mouse_buttons = mouse_and_window_and_camera.mouse;
     let window_query = mouse_and_window_and_camera.window;
@@ -73,6 +75,17 @@ fn update_selection(
 
     let mut current_selection = selection_params.current_selection;
     let selected_query = selection_params.selected_query;
+
+    let local_player = player_params.local_player;
+    let player_controls = player_params.player_controls;
+
+    if contexts
+        .ctx_mut()
+        .ok()
+        .is_some_and(|ctx| ctx.wants_pointer_input())
+    {
+        return;
+    }
 
     if !mouse_buttons.just_pressed(MouseButton::Left) {
         return;
@@ -82,7 +95,6 @@ fn update_selection(
         return;
     };
 
-    // Check if clicked outside map
     if (mouse_pos.x).abs() * 2.0 > map_size.0.x || (mouse_pos.y).abs() * 2.0 > map_size.0.y {
         for entity in selected_query.iter() {
             commands.entity(entity).remove::<Selected>();
@@ -91,17 +103,16 @@ fn update_selection(
         return;
     }
 
-    // Get player's controlled country
     let player_country_entity = local_player.0;
-    let Ok(player_control) = player_controls.get(player_country_entity) else { return };
+    let Ok(player_control) = player_controls.get(player_country_entity) else {
+        return;
+    };
     let player_country = player_control.0;
 
-    // Army selection — ONLY if owned by player
     let mut closest_army: Option<(Entity, f32)> = None;
     const RADIUS: f32 = 8.0;
 
     for (entity, army, transform) in army_query.iter() {
-        // Critical fix: skip enemy/AI armies
         if army.owner != player_country {
             continue;
         }
@@ -126,7 +137,6 @@ fn update_selection(
         return;
     }
 
-    // Province selection (unchanged)
     let closest = province_query.iter().min_by(|(_, a), (_, b)| {
         squared_distance(a.center, mouse_pos)
             .partial_cmp(&squared_distance(b.center, mouse_pos))

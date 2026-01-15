@@ -122,13 +122,9 @@ fn draw_pending_move_arrows(
     for (pending, transform) in &pending_armies {
         if let Ok(target) = provinces.get(pending.target_province) {
             let start = transform.translation();
-            let end = Vec3::new(target.center.x, 0.15, target.center.y); // slightly above ground
+            let end = Vec3::new(target.center.x, 0.15, target.center.y);
 
-            gizmos.arrow(
-                start,
-                end,
-                Color::srgba(0.1, 0.9, 0.4, 0.85), // player green
-            );
+            gizmos.arrow(start, end, Color::srgba(0.1, 0.9, 0.4, 0.85));
         }
     }
 }

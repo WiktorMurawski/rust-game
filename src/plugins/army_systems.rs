@@ -41,8 +41,6 @@ fn merge_armies_in_same_province(mut commands: Commands, armies: Query<(Entity, 
             for (entity, _) in army_list.iter().skip(1) {
                 commands.entity(*entity).despawn();
             }
-
-            // println!("Merged armies: {} units total", total_units);
         }
     }
 }

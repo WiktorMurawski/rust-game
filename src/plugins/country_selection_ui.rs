@@ -44,7 +44,6 @@ fn country_selection_ui(
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for (country_entity, country) in countries.iter() {
                     ui.horizontal(|ui| {
-                        // Show country color as a small square
                         let color = country.color;
                         let color32 = egui::Color32::from_rgb(
                             (color.to_srgba().red * 255.0) as u8,
@@ -54,7 +53,6 @@ fn country_selection_ui(
                         ui.colored_label(color32, "■");
 
                         if ui.button(&country.name).clicked() {
-                            // Create player entity
                             let player_entity = commands
                                 .spawn((
                                     Player {
@@ -67,7 +65,6 @@ fn country_selection_ui(
 
                             commands.entity(country_entity).remove::<AIControlled>();
 
-                            // Store as local player
                             commands.insert_resource(LocalPlayer(player_entity));
 
                             println!("Player selected: {}", country.name);
