@@ -1,7 +1,8 @@
 use std::cmp::Ordering;
 use bevy::prelude::*;
-use crate::components::army::{Army, HasActedThisTurn, PendingMove};
-use crate::components::province::Province;
+use crate::components::army::{Army, PendingMove};
+use crate::components::country::{Relation, Relations};
+use crate::components::province::{OwnedBy, Province, TerrainType};
 use crate::misc::{mouse_to_world_coords, squared_distance, MouseAndWindowAndCamera};
 use crate::plugins::selection::{CurrentSelection, SelectedEntity};
 use crate::states::{AppState, GamePhase};
@@ -20,8 +21,9 @@ fn queue_army_move(
     current_selection: Res<CurrentSelection>,
     game_phase: Res<State<GamePhase>>,
     armies: Query<&Army>,
-    province_query: Query<(Entity, &Province)>,
+    province_query: Query<(Entity, &Province, &OwnedBy)>,
     pending_moves: Query<&PendingMove>,
+    relations: Query<&Relations>,
     mouse_and_window_and_cam: MouseAndWindowAndCamera,
 ) {
     if *game_phase.get() != GamePhase::PlayerTurn {
@@ -36,7 +38,7 @@ fn queue_army_move(
         return;
     }
 
-    let Some(mouse_pos) = mouse_to_world_coords(window_query,camera_query) else {
+    let Some(mouse_pos) = mouse_to_world_coords(window_query, camera_query) else {
         return;
     };
 
@@ -45,28 +47,47 @@ fn queue_army_move(
         return;
     };
 
-    if armies.get(army_entity).is_err() || pending_moves.get(army_entity).is_ok() {
-        // already has pending move or invalid army
-        return;
+    let Ok(army) = armies.get(army_entity) else { return };
+    if pending_moves.get(army_entity).is_ok() {
+        return; // already has pending move
     }
 
     // Find closest province under cursor
-    let Some((target_province_entity, target_province)) = province_query.iter().min_by(|(_, a), (_, b)| {
-        squared_distance(a.center, mouse_pos)
-            .partial_cmp(&squared_distance(b.center, mouse_pos))
-            .unwrap_or(Ordering::Equal)
-    })
-    else { return; };
+    let Some((target_province_entity, target_province, target_owned_by)) =
+        province_query.iter().min_by(|(_, a, _), (_, b, _)| {
+            squared_distance(a.center, mouse_pos)
+                .partial_cmp(&squared_distance(b.center, mouse_pos))
+                .unwrap_or(Ordering::Equal)
+        }) else {
+        return;
+    };
 
-    // Very simple validity check for now (later: real adjacency + movement points)
-    let Ok(army) = armies.get(army_entity) else { return };
-    let Ok((current_province_entity, current_prov)) = province_query.get(army.province) else { return };
+    // Get current province info
+    let Ok((current_province_entity, current_prov, current_owned_by)) =
+        province_query.get(army.province) else {
+        return;
+    };
 
     let is_adjacent = current_prov.neighbors.contains(&target_province.id);
-    let same_owner  = true;
+    let is_land = target_province.terrain != TerrainType::Water;
 
-    if !is_adjacent || !same_owner {
-        // optional: play sound / show message "Cannot move there"
+    // Diplomacy check
+    let can_enter = if current_owned_by.0 == target_owned_by.0 {
+        // Same owner → always allowed
+        true
+    } else {
+        // Different owner → check if at war
+        relations
+            .get(army.owner)
+            .ok()
+            .is_some_and(|rels| rels.get(target_owned_by.0) == Relation::War)
+    };
+
+    if !is_adjacent || !is_land || !can_enter {
+        println!(
+            "Invalid move attempt: adjacent={}, land={}, can_enter={}",
+            is_adjacent, is_land, can_enter
+        );
         return;
     }
 
@@ -75,10 +96,10 @@ fn queue_army_move(
         target_province: target_province_entity,
     });
 
-    // Optional: mark as acted (if you want only one move per turn)
-    // commands.entity(army_entity).insert(HasActedThisTurn);
-
-    println!("Move queued: Army {:?} from {:?} to {:?}", army_entity, current_province_entity, target_province_entity);
+    println!(
+        "Move queued: Army {:?} from province {:?} to province {:?}",
+        army_entity, current_province_entity, target_province_entity
+    );
 }
 
 fn draw_pending_move_arrows(

@@ -102,7 +102,7 @@ fn initialize_new_game(
             .map(|path| asset_server.load(path.clone()));
 
         let country_entity = commands
-            .spawn(Country {
+            .spawn((Country {
                 id: country_def.id,
                 name: country_def.name.clone(),
                 color: country_def.color,
@@ -110,7 +110,8 @@ fn initialize_new_game(
                 gold: country_def.gold,
                 flag,
                 flag_path: country_def.flag_path.clone(),
-            })
+            },
+                    Relations::default(),))
             .id();
 
         country_entities.insert(country_def.id, country_entity);
@@ -175,7 +176,7 @@ fn load_and_apply_save(
             .map(|path| asset_server.load(path.clone()));
 
         let country_entity = commands
-            .spawn(Country {
+            .spawn((Country {
                 id: country_data.id,
                 name: country_data.name.clone(),
                 color: country_data.color,
@@ -183,7 +184,7 @@ fn load_and_apply_save(
                 gold: country_data.gold,
                 flag,
                 flag_path: country_data.flag_path.clone(),
-            })
+            },Relations::default(),))
             .id();
 
         country_entities.insert(country_data.id, country_entity);

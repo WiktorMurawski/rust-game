@@ -1,8 +1,6 @@
-use std::cmp::Ordering;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use crate::components::province::Province;
 
 #[derive(SystemParam)]
 pub struct MouseAndWindowAndCamera<'w, 's> {

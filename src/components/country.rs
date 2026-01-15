@@ -1,3 +1,6 @@
+use bevy::platform::collections::HashMap;
+// use std::collections::HashMap;
+// components/country.rs
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -42,4 +45,34 @@ mod color_def {
         let (r, g, b) = <(f32, f32, f32)>::deserialize(deserializer)?;
         Ok(Color::srgb(r, g, b))
     }
+}
+
+// Component on Country entities
+#[derive(Component, Default, Clone)]
+pub struct Relations {
+    pub relations: HashMap<Entity, Relation>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Relation {
+    Peace,
+    War,
+}
+
+impl Relations {
+    pub fn get(&self, country: Entity) -> Relation {
+        *self.relations.get(&country).unwrap_or(&Relation::Peace)
+    }
+
+    pub fn set(&mut self, country: Entity, relation: Relation) {
+        self.relations.insert(country, relation);
+    }
+}
+
+// Event for diplomacy changes (for reactivity)
+#[derive(Event)]
+pub struct DiplomacyChanged {
+    pub declarer: Entity,
+    pub target: Entity,
+    pub new_relation: Relation,
 }

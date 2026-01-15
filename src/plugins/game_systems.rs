@@ -34,7 +34,8 @@ impl Plugin for GameSystems {
             .add_plugins(PlayerCountryUI)
             .add_plugins(BuildingsUI)
             .add_plugins(ArmyRendering)
-            .add_plugins(EndTurnUI);
+            .add_plugins(EndTurnUI)
+            .add_plugins(DiplomacyUIPlugin);
     }
 }
 

@@ -1,3 +1,4 @@
+// plugins/turn.rs
 use bevy::prelude::*;
 use crate::components::army::{Army, HasActedThisTurn, PendingMove};
 use crate::components::province::Province;
@@ -8,7 +9,6 @@ pub struct TurnPlugin;
 impl Plugin for TurnPlugin {
     fn build(&self, app: &mut App) {
         app
-            .init_state::<GamePhase>()
             .add_systems(
                 Update,
                 process_turn_moves
@@ -20,7 +20,6 @@ impl Plugin for TurnPlugin {
 fn process_turn_moves(
     mut commands: Commands,
     mut armies: Query<&mut Army>,
-    provinces: Query<&Province>,
     pending_moves_q: Query<(Entity, &PendingMove)>,
     mut next_state: ResMut<NextState<GamePhase>>,
 ) {
@@ -31,11 +30,6 @@ fn process_turn_moves(
 
         if let Ok(mut army) = armies.get_mut(entity) {
             army.province = pending.target_province;
-
-            // Optional: update logical position if you store it
-            // if let Ok(prov) = provinces.get(pending.target_province) {
-            //     // army.position = prov.center;  (if you have it)
-            // }
 
             // Cleanup markers
             commands.entity(entity).remove::<PendingMove>();
