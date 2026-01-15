@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use crate::components::army::{Army, PendingMove};
 use crate::components::country::{Relation, Relations};
@@ -16,13 +17,18 @@ impl Plugin for ArmyMovementPlugin {
     }
 }
 
+#[derive(SystemParam)]
+struct ArmyMoveQueries<'w, 's> {
+    armies: Query<'w, 's, &'static Army>,
+    pending_moves: Query<'w, 's, &'static PendingMove>,
+}
+
 fn queue_army_move(
     mut commands: Commands,
     current_selection: Res<CurrentSelection>,
     game_phase: Res<State<GamePhase>>,
-    armies: Query<&Army>,
+    army_move_queries: ArmyMoveQueries,
     province_query: Query<(Entity, &Province, &OwnedBy)>,
-    pending_moves: Query<&PendingMove>,
     relations: Query<&Relations>,
     mouse_and_window_and_cam: MouseAndWindowAndCamera,
 ) {
@@ -30,6 +36,8 @@ fn queue_army_move(
         return;
     }
 
+    let armies = army_move_queries.armies;
+    let pending_moves = army_move_queries.pending_moves;
     let mouse_buttons = mouse_and_window_and_cam.mouse;
     let window_query = mouse_and_window_and_cam.window;
     let camera_query = mouse_and_window_and_cam.camera;
@@ -72,7 +80,7 @@ fn queue_army_move(
     let is_land = target_province.terrain != TerrainType::Water;
 
     // Diplomacy check
-    let can_enter = if current_owned_by.0 == target_owned_by.0 {
+    let can_enter = if army.owner == target_owned_by.owner {
         // Same owner → always allowed
         true
     } else {
@@ -80,7 +88,7 @@ fn queue_army_move(
         relations
             .get(army.owner)
             .ok()
-            .is_some_and(|rels| rels.get(target_owned_by.0) == Relation::War)
+            .is_some_and(|rels| rels.get(target_owned_by.owner) == Relation::War)
     };
 
     if !is_adjacent || !is_land || !can_enter {

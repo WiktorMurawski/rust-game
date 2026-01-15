@@ -1,3 +1,4 @@
+// components/province.rs
 use bevy::{platform::collections::HashSet, prelude::*};
 use serde::Deserialize;
 use serde::Serialize;
@@ -24,11 +25,21 @@ pub struct ProvinceBorder {
 }
 
 #[derive(Component)]
-pub struct OwnedBy(pub Entity);
+pub struct OwnedBy{
+    pub owner: Entity,
+}
+
+impl OwnedBy {
+    pub fn owner(&self) -> Entity { self.owner }
+}
 
 #[derive(Component)]
 pub struct Occupied {
     pub occupier: Entity,
+}
+
+impl Occupied {
+    pub fn occupier(&self) -> Entity { self.occupier }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]

@@ -42,7 +42,7 @@ fn province_info_ui(
                     ui.label(format!("Center: {:#}", province.center));
 
                     if let Some(owner) = owner {
-                        if let Ok(country) = countries.get(owner.0) {
+                        if let Ok(country) = countries.get(owner.owner) {
                             ui.label(format!("Owner: {}", country.name));
                         } else {
                             ui.label("Owner: Unknown");

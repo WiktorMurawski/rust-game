@@ -70,7 +70,7 @@ impl Relations {
 }
 
 // Event for diplomacy changes (for reactivity)
-#[derive(Event)]
+#[derive(Event, Message)]
 pub struct DiplomacyChanged {
     pub declarer: Entity,
     pub target: Entity,

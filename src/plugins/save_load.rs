@@ -92,7 +92,13 @@ fn initialize_new_game(
     mut next_state: ResMut<NextState<AppState>>,
     asset_server: Res<AssetServer>,
 ) {
-    let country_defs = load_countries_from_file();
+    let country_defs = match load_countries_from_file() {
+        Ok(x) => {x}
+        Err(err) => {
+            eprintln!("{:?}",err);
+            return;
+        }
+    };
 
     let mut country_entities = HashMap::new();
     for country_def in &country_defs {
@@ -123,13 +129,12 @@ fn initialize_new_game(
                 if let Some(&province_entity) = province_map.0.get(&province_id) {
                     commands
                         .entity(province_entity)
-                        .insert(OwnedBy(country_entity));
+                        .insert(OwnedBy{owner:country_entity});
                 }
             }
         }
     }
 
-    // Transition to country selection
     next_state.set(AppState::CountrySelection);
 }
 
@@ -203,7 +208,7 @@ fn load_and_apply_save(
 
             commands
                 .entity(province_entity)
-                .insert(OwnedBy(country_entity));
+                .insert(OwnedBy{owner:country_entity});
         }
     }
 
@@ -267,7 +272,7 @@ pub fn save_game(
             .iter()
             .filter_map(|(province, owner)| {
                 owner.and_then(|o| {
-                    if countries.get(o.0).ok()?.id == country.id {
+                    if countries.get(o.owner).ok()?.id == country.id {
                         Some(province.id)
                     } else {
                         None
@@ -311,7 +316,6 @@ pub fn save_game(
     Ok(())
 }
 
-// Much cleaner function signatures!
 fn load_save_file(path: &str) -> Result<SaveData> {
     let file = std::fs::read_to_string(path)
         .with_context(|| format!("Failed to read save file at '{}'", path))?;
@@ -319,8 +323,9 @@ fn load_save_file(path: &str) -> Result<SaveData> {
     ron::from_str(&file).context("Save file is corrupted or invalid")
 }
 
-fn load_countries_from_file() -> Vec<CountryDef> {
+fn load_countries_from_file() -> Result<Vec<CountryDef>> {
     let file =
-        std::fs::read_to_string("assets/data/countries.ron").expect("Failed to read countries.ron");
-    ron::from_str(&file).expect("Failed to parse countries.ron")
+        std::fs::read_to_string("assets/data/countries.ron")?;
+    
+    ron::from_str(&file).context("Failed to parse countries.ron")
 }

@@ -1,3 +1,4 @@
+// plugins/province_visuals.rs
 use crate::components::country::*;
 use crate::components::province::*;
 use crate::plugins::selection::Selected;
@@ -16,7 +17,7 @@ impl Plugin for ProvinceVisualsPlugin {
                 (
                     toggle_map_mode,
                     toggle_borders,
-                    update_province_colors,
+                    // update_province_colors,
                     update_changed_province_colors,
                     update_border_visibility,
                     update_selected_province_borders,
@@ -56,41 +57,8 @@ type ProvinceQuery<'a> = (
     &'a Province,
     &'a MeshMaterial3d<StandardMaterial>,
     Option<&'a OwnedBy>,
+    Option<&'a Occupied>,
 );
-
-fn update_province_colors(
-    map_mode: Res<MapMode>,
-    provinces: Query<ProvinceQuery>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    countries: Query<&Country>,
-) {
-    if !map_mode.is_changed() {
-        return;
-    }
-
-    for (province, material_handle, owner) in provinces.iter() {
-        let Some(material) = materials.get_mut(&material_handle.0) else {
-            continue;
-        };
-
-        let color = match *map_mode {
-            MapMode::Terrain => province.terrain.color(),
-            MapMode::Political => {
-                if let Some(owner) = owner {
-                    if let Ok(country) = countries.get(owner.0) {
-                        country.color
-                    } else {
-                        Color::srgb(0.0, 0.0, 1.0)
-                    }
-                } else {
-                    Color::srgb(0.0, 0.0, 1.0)
-                }
-            }
-        };
-
-        material.base_color = color;
-    }
-}
 
 fn update_changed_province_colors(
     map_mode: Res<MapMode>,
@@ -98,26 +66,43 @@ fn update_changed_province_colors(
     mut materials: ResMut<Assets<StandardMaterial>>,
     countries: Query<&Country>,
 ) {
-    for (province, material_handle, owner) in changed_provinces.iter() {
+    for (province, material_handle, owner_opt, occupied_opt) in &changed_provinces {
         let Some(material) = materials.get_mut(&material_handle.0) else {
             continue;
         };
 
         if province.terrain == TerrainType::Water {
-            let color = province.terrain.color();
-            material.base_color = color;
+            material.base_color = province.terrain.color();
             continue;
         }
 
         let color = match *map_mode {
             MapMode::Terrain => province.terrain.color(),
+
             MapMode::Political => {
-                if let Some(owner) = owner {
-                    if let Ok(country) = countries.get(owner.0) {
-                        country.color
+                if let Some(occupied) = occupied_opt {
+                    // Occupied province → use occupier's color with tint
+                    if let Ok(occ_country) = countries.get(occupied.occupier) {
+                        match occ_country.color {
+                            Color::Srgba(s) => Color::srgba(
+                                (s.red   * 0.65 + 0.12).clamp(0.0, 1.0),
+                                (s.green * 0.55).clamp(0.0, 1.0),
+                                (s.blue  * 0.55).clamp(0.0, 1.0),
+                                s.alpha,
+                            ),
+                            // Fallback: use original color if not in Srgba space
+                            _ => occ_country.color,
+                        }
                     } else {
-                        Color::srgb(0.0, 0.0, 1.0)
+                        // Fallback when occupier country not found
+                        Color::srgb(0.8, 0.1, 0.1)
                     }
+                } else if let Some(owner) = owner_opt {
+                    // Normal owned province
+                    countries
+                        .get(owner.owner)
+                        .map(|c| c.color)
+                        .unwrap_or(Color::srgb(0.0, 0.0, 1.0))
                 } else {
                     Color::srgb(0.0, 0.0, 1.0)
                 }
@@ -193,3 +178,37 @@ fn update_border_color(
         }
     }
 }
+
+// fn update_province_colors(
+//     map_mode: Res<MapMode>,
+//     provinces: Query<ProvinceQuery>,
+//     mut materials: ResMut<Assets<StandardMaterial>>,
+//     countries: Query<&Country>,
+// ) {
+//     if !map_mode.is_changed() {
+//         return;
+//     }
+//
+//     for (province, material_handle, owner) in provinces.iter() {
+//         let Some(material) = materials.get_mut(&material_handle.0) else {
+//             continue;
+//         };
+//
+//         let color = match *map_mode {
+//             MapMode::Terrain => province.terrain.color(),
+//             MapMode::Political => {
+//                 if let Some(owner) = owner {
+//                     if let Ok(country) = countries.get(owner.owner) {
+//                         country.color
+//                     } else {
+//                         Color::srgb(0.0, 0.0, 1.0)
+//                     }
+//                 } else {
+//                     Color::srgb(0.0, 0.0, 1.0)
+//                 }
+//             }
+//         };
+//
+//         material.base_color = color;
+//     }
+// }

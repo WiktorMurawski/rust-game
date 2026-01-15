@@ -54,9 +54,11 @@ fn billboard_text(
     mut query: Query<&mut Transform, With<Text3d>>,
     camera: Query<&Transform, (With<Camera>, Without<Text3d>)>,
 ) {
-    for mut tf in &mut query {
-        let dir = tf.translation - camera.single().unwrap().translation;
-        tf.look_at(dir.normalize_or_zero(), Vec3::Y);
+    if let Ok(camera_single) = camera.single(){
+        for mut tf in &mut query {
+            let dir = tf.translation - camera_single.translation;
+            tf.look_at(dir.normalize_or_zero(), Vec3::Y);
+        }
     }
 }
 

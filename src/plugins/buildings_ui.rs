@@ -44,11 +44,11 @@ fn province_building_ui(
             .and_then(|lp| player_query.get(lp.0).ok())
             .map(|controls| controls.0);
 
-        if Some(owned_by.0) != player_country_entity {
+        if Some(owned_by.owner) != player_country_entity {
             return;
         }
 
-        let Ok(mut player_country) = countries.get_mut(owned_by.0) else {
+        let Ok(mut player_country) = countries.get_mut(owned_by.owner) else {
             return;
         };
 
@@ -92,7 +92,7 @@ fn province_building_ui(
                         let _army_entity = commands
                             .spawn((
                                 Army {
-                                    owner: owned_by.0,
+                                    owner: owned_by.owner,
                                     province: province_entity,
                                     units: 100,
                                 },

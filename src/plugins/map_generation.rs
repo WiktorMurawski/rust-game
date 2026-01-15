@@ -1,4 +1,5 @@
 // plugins/map_generation.rs
+use anyhow::Context;
 use crate::components::buildings::Buildings;
 use crate::components::province::*;
 use crate::resources::MapSize;
@@ -34,7 +35,13 @@ fn load_map_geometry(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let map_data = load_map_data_from_file();
+    let map_data = match load_map_data_from_file(){
+        Ok(x) => x,
+        Err(err) => {
+            eprintln!("Couldn't load map data from file: {:?}", err);
+            return;
+        }
+    };
     let map_size = Vec2::from(map_data.map_size);
 
     commands.insert_resource(MapSize(map_size));
@@ -106,8 +113,13 @@ fn generate_provinces(province_defs: &[ProvinceDef], map_size: Vec2) -> Vec<Prov
         .map(|p| Vec2::new(p.center.0, p.center.1))
         .collect();
 
-    let voronoi_diagram =
-        build_voronoi(&province_centers, map_size).expect("Failed to build voronoi");
+    let voronoi_diagram = match build_voronoi(&province_centers, map_size){
+        Some(x) => x,
+        None => {
+            eprintln!("Couldn't build voronoi diagram");
+            return Vec::new();
+        }
+    };
     let polygons = extract_polygons(&voronoi_diagram);
     let cell_neighbors = calculate_neighbors(&voronoi_diagram);
 
@@ -196,7 +208,7 @@ fn polygon_to_mesh(polygon: &[Vec2]) -> Mesh {
         .flat_map(|v| [v.x as f64, v.y as f64])
         .collect();
 
-    let indices = earcut(&flattened, &[], 2).expect("Triangulation failed");
+    let indices = earcut(&flattened, &[], 2).unwrap_or_default();
 
     let positions: Vec<[f32; 3]> = polygon.iter().map(|v| [v.x, 0.0, v.y]).collect();
     let normals = vec![[0.0, 1.0, 0.0]; positions.len()];
@@ -303,9 +315,9 @@ fn add_background_mesh(
     ));
 }
 
-fn load_map_data_from_file() -> MapData {
-    let file = std::fs::read_to_string("assets/data/map.ron").expect("Failed to read map.ron");
-    ron::from_str(&file).expect("Failed to parse map.ron")
+fn load_map_data_from_file() -> anyhow::Result<MapData> {
+    let file = std::fs::read_to_string("assets/data/map.ron")?;
+    ron::from_str(&file).context("Failed to parse map.ron")
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
