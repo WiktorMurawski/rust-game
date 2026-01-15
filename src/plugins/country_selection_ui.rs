@@ -1,5 +1,5 @@
 // plugins/country_selection_ui.rs
-use crate::components::country::Country;
+use crate::components::country::{AIControlled, Country};
 use crate::components::player::{ControlsCountry, LocalPlayer, Player};
 use crate::states::AppState;
 use bevy::prelude::*;
@@ -64,6 +64,8 @@ fn country_selection_ui(
                                     ControlsCountry(country_entity),
                                 ))
                                 .id();
+
+                            commands.entity(country_entity).remove::<AIControlled>();
 
                             // Store as local player
                             commands.insert_resource(LocalPlayer(player_entity));

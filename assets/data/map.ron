@@ -405,7 +405,7 @@
             terrain: City,
             population: 1000,
             base_growth: 0.01,
-            base_income: 100,
+            base_income: 20,
         ),
         (
             id: 102,
@@ -413,7 +413,7 @@
             terrain: Forest,
             population: 300,
             base_growth: 0.015,
-            base_income: 20,
+            base_income: 10,
         ),
         (
             id: 103,
@@ -421,7 +421,7 @@
             terrain: Forest,
             population: 300,
             base_growth: 0.015,
-            base_income: 20,
+            base_income: 10,
         ),
         (
             id: 104,
@@ -429,7 +429,7 @@
             terrain: Forest,
             population: 300,
             base_growth: 0.015,
-            base_income: 20,
+            base_income: 10,
         ),
         (
             id: 105,
@@ -437,7 +437,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 106,
@@ -445,7 +445,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 107,
@@ -453,7 +453,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 108,
@@ -461,7 +461,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 109,
@@ -469,7 +469,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 110,
@@ -477,7 +477,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 111,
@@ -485,7 +485,7 @@
             terrain: Forest,
             population: 300,
             base_growth: 0.015,
-            base_income: 20,
+            base_income: 10,
         ),
         (
             id: 112,
@@ -493,7 +493,7 @@
             terrain: Forest,
             population: 300,
             base_growth: 0.015,
-            base_income: 20,
+            base_income: 10,
         ),
         (
             id: 113,
@@ -501,7 +501,7 @@
             terrain: City,
             population: 1000,
             base_growth: 0.01,
-            base_income: 100,
+            base_income: 20,
         ),
         (
             id: 114,
@@ -509,7 +509,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 115,
@@ -517,7 +517,7 @@
             terrain: Forest,
             population: 300,
             base_growth: 0.015,
-            base_income: 20,
+            base_income: 10,
         ),
         (
             id: 116,
@@ -525,7 +525,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 117,
@@ -533,7 +533,7 @@
             terrain: Forest,
             population: 300,
             base_growth: 0.015,
-            base_income: 20,
+            base_income: 10,
         ),
         (
             id: 118,
@@ -541,7 +541,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 119,
@@ -549,7 +549,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 120,
@@ -557,7 +557,7 @@
             terrain: Forest,
             population: 300,
             base_growth: 0.015,
-            base_income: 20,
+            base_income: 10,
         ),
         (
             id: 121,
@@ -565,7 +565,7 @@
             terrain: Mountains,
             population: 300,
             base_growth: 0.005,
-            base_income: 15,
+            base_income: 10,
         ),
         (
             id: 122,
@@ -573,7 +573,7 @@
             terrain: Mountains,
             population: 300,
             base_growth: 0.005,
-            base_income: 15,
+            base_income: 5,
         ),
 
         (
@@ -582,7 +582,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 202,
@@ -590,7 +590,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 203,
@@ -598,7 +598,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 204,
@@ -606,7 +606,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
 
         (
@@ -615,7 +615,7 @@
             terrain: City,
             population: 1000,
             base_growth: 0.01,
-            base_income: 100,
+            base_income: 20,
         ),
         (
             id: 302,
@@ -623,7 +623,7 @@
             terrain: Mountains,
             population: 300,
             base_growth: 0.05,
-            base_income: 15,
+            base_income: 10,
         ),
         (
             id: 303,
@@ -631,7 +631,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 304,
@@ -639,7 +639,7 @@
             terrain: Forest,
             population: 300,
             base_growth: 0.015,
-            base_income: 20,
+            base_income: 10,
         ),
         (
             id: 305,
@@ -647,7 +647,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 306,
@@ -655,7 +655,7 @@
             terrain: Mountains,
             population: 300,
             base_growth: 0.005,
-            base_income: 15,
+            base_income: 10,
         ),
         (
             id: 307,
@@ -663,7 +663,7 @@
             terrain: Mountains,
             population: 300,
             base_growth: 0.005,
-            base_income: 15,
+            base_income: 10,
         ),
         (
             id: 308,
@@ -671,7 +671,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
         (
             id: 309,
@@ -679,7 +679,7 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
 
         (
@@ -688,7 +688,7 @@
             terrain: Mountains,
             population: 300,
             base_growth: 0.005,
-            base_income: 15,
+            base_income: 10,
         ),
         (
             id: 402,
@@ -696,7 +696,7 @@
             terrain: City,
             population: 1000,
             base_growth: 0.01,
-            base_income: 100,
+            base_income: 20,
         ),
         (
             id: 403,
@@ -704,10 +704,8 @@
             terrain: Plains,
             population: 500,
             base_growth: 0.02,
-            base_income: 10,
+            base_income: 5,
         ),
-
-
 
     ],
 )

@@ -42,7 +42,7 @@ pub struct CountrySaveData {
     pub name: String,
     #[serde(with = "color_serde")]
     pub color: Color,
-    pub gold: u64,
+    pub gold: u32,
     pub owned_provinces: Vec<u32>,
     pub flag_path: Option<String>,
 }
@@ -107,20 +107,23 @@ fn initialize_new_game(
             .as_ref()
             .map(|path| asset_server.load(path.clone()));
 
-        let country_entity = commands
-            .spawn((
-                Country {
-                    id: country_def.id,
-                    name: country_def.name.clone(),
-                    color: country_def.color,
-                    owned_provinces: country_def.owned_provinces.clone(),
-                    gold: country_def.gold,
-                    flag,
-                    flag_path: country_def.flag_path.clone(),
-                },
-                Relations::default(),
-            ))
-            .id();
+        let mut builder = commands.spawn((
+            Country {
+                id: country_def.id,
+                name: country_def.name.clone(),
+                color: country_def.color,
+                owned_provinces: country_def.owned_provinces.clone(),
+                gold: country_def.gold,
+                flag,
+                flag_path: country_def.flag_path.clone(),
+            },
+            Relations::default(),
+        ));
+
+        // Mark ALL countries as AI-controlled initially
+        builder.insert(AIControlled);
+
+        let country_entity = builder.id();
 
         country_entities.insert(country_def.id, country_entity);
     }
@@ -182,20 +185,25 @@ fn load_and_apply_save(
             .as_ref()
             .map(|path| asset_server.load(path.clone()));
 
-        let country_entity = commands
-            .spawn((
-                Country {
-                    id: country_data.id,
-                    name: country_data.name.clone(),
-                    color: country_data.color,
-                    owned_provinces: country_data.owned_provinces.clone(),
-                    gold: country_data.gold,
-                    flag,
-                    flag_path: country_data.flag_path.clone(),
-                },
-                Relations::default(),
-            ))
-            .id();
+        let mut builder = commands.spawn((
+            Country {
+                id: country_data.id,
+                name: country_data.name.clone(),
+                color: country_data.color,
+                owned_provinces: country_data.owned_provinces.clone(),
+                gold: country_data.gold,
+                flag,
+                flag_path: country_data.flag_path.clone(),
+            },
+            Relations::default(),
+        ));
+
+        // Mark as AI-controlled UNLESS it's the saved player country
+        if Some(country_data.id) != save_data.player_country_id {
+            builder.insert(AIControlled);
+        }
+
+        let country_entity = builder.id();
 
         country_entities.insert(country_data.id, country_entity);
     }

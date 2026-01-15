@@ -6,6 +6,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_egui::EguiContexts;
 use std::cmp::Ordering;
+use crate::components::player::{ControlsCountry, LocalPlayer};
 
 pub struct SelectionPlugin;
 
@@ -59,9 +60,12 @@ fn update_selection(
     selection_params: SelectionParams,
     map_size: Res<MapSize>,
     mouse_and_window_and_camera: MouseAndWindowAndCamera,
+    local_player: Res<LocalPlayer>,                    // ← added
+    player_controls: Query<&ControlsCountry>,          // ← added
 ) {
-    if contexts.ctx_mut().ok().is_some_and(|ctx| ctx.wants_pointer_input())
-    { return; }
+    if contexts.ctx_mut().ok().is_some_and(|ctx| ctx.wants_pointer_input()) {
+        return;
+    }
 
     let mouse_buttons = mouse_and_window_and_camera.mouse;
     let window_query = mouse_and_window_and_camera.window;
@@ -70,9 +74,13 @@ fn update_selection(
     let mut current_selection = selection_params.current_selection;
     let selected_query = selection_params.selected_query;
 
-    if !mouse_buttons.just_pressed(MouseButton::Left) { return; }
+    if !mouse_buttons.just_pressed(MouseButton::Left) {
+        return;
+    }
 
-    let Some(mouse_pos) = mouse_to_world_coords(window_query, camera_query) else { return; };
+    let Some(mouse_pos) = mouse_to_world_coords(window_query, camera_query) else {
+        return;
+    };
 
     // Check if clicked outside map
     if (mouse_pos.x).abs() * 2.0 > map_size.0.x || (mouse_pos.y).abs() * 2.0 > map_size.0.y {
@@ -83,12 +91,22 @@ fn update_selection(
         return;
     }
 
-    let mut closest_army: Option<(Entity, f32)> = None;
+    // Get player's controlled country
+    let player_country_entity = local_player.0;
+    let Ok(player_control) = player_controls.get(player_country_entity) else { return };
+    let player_country = player_control.0;
 
+    // Army selection — ONLY if owned by player
+    let mut closest_army: Option<(Entity, f32)> = None;
     const RADIUS: f32 = 8.0;
 
-    for (entity, _army, transform) in army_query.iter() {
-        let army_pos_2d = transform.translation().xz(); // Get x,z position
+    for (entity, army, transform) in army_query.iter() {
+        // Critical fix: skip enemy/AI armies
+        if army.owner != player_country {
+            continue;
+        }
+
+        let army_pos_2d = transform.translation().xz();
         let distance = mouse_pos.distance(army_pos_2d);
 
         if distance < RADIUS && closest_army.is_none_or(|(_, d)| distance < d) {
@@ -108,6 +126,7 @@ fn update_selection(
         return;
     }
 
+    // Province selection (unchanged)
     let closest = province_query.iter().min_by(|(_, a), (_, b)| {
         squared_distance(a.center, mouse_pos)
             .partial_cmp(&squared_distance(b.center, mouse_pos))

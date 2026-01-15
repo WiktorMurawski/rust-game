@@ -1,12 +1,19 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
+use bevy_egui::EguiContexts;
 
 #[derive(SystemParam)]
 pub struct MouseAndWindowAndCamera<'w, 's> {
     pub mouse: Res<'w, ButtonInput<MouseButton>>,
     pub window: Query<'w, 's, &'static Window, With<PrimaryWindow>>,
     pub camera: Query<'w, 's, (&'static Camera, &'static GlobalTransform)>,
+}
+
+#[derive(SystemParam)]
+pub struct CommandsAndContexts<'w, 's> {
+    pub commands: Commands<'w, 's>,
+    pub contexts: EguiContexts<'w, 's>,
 }
 
 pub fn squared_distance(a: Vec2, b: Vec2) -> f32 {
@@ -39,3 +46,5 @@ pub fn mouse_to_world_coords(
 
     Some(point.xz())
 }
+
+pub fn empty_function() {}

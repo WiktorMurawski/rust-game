@@ -65,7 +65,7 @@ fn province_building_ui(
                     }
 
                     let cost = building_type.cost();
-                    let can_afford = player_country.gold >= cost as u64;
+                    let can_afford = player_country.gold >= cost;
 
                     ui.horizontal(|ui| {
                         ui.label(format!(
@@ -75,7 +75,7 @@ fn province_building_ui(
                             building_type.description()
                         ));
                         if ui.button("Build").clicked() && can_afford {
-                            player_country.gold -= cost as u64;
+                            player_country.gold -= cost;
                             buildings.built.push(building_type);
                         }
                     });

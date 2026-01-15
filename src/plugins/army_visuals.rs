@@ -4,6 +4,7 @@ use crate::components::province::Province;
 use crate::states::AppState;
 use bevy::prelude::*;
 use bevy_rich_text3d::{Text3d, TextAtlas};
+use crate::components::country::Country;
 
 pub struct ArmyRendering;
 
@@ -65,18 +66,43 @@ fn billboard_text(
 fn render_armies(
     mut commands: Commands,
     armies: Query<(Entity, &Army), Added<Army>>,
-    // provinces: Query<&Province>,
+    countries: Query<&Country>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    // asset_server: &Res<AssetServer>,
 ) {
     for (army_entity, army) in &armies {
         commands.entity(army_entity).with_children(|parent| {
+
+            let country_color = countries
+                .get(army.owner)
+                .map(|country| country.color)
+                .unwrap_or(Color::srgb(0.5, 0.5, 0.5));
+
+            let model_color = match country_color {
+                Color::Srgba(s) => Color::srgba(
+                    (s.red   * 0.7).clamp(0.0, 1.0),
+                    (s.green * 0.7).clamp(0.0, 1.0),
+                    (s.blue  * 0.7).clamp(0.0, 1.0),
+                    s.alpha,
+                ),
+                _ => country_color,
+            };
+
+            let label_color = match country_color {
+                Color::Srgba(s) => Color::srgba(
+                    (s.red   * 1.4).clamp(0.0, 1.0),
+                    (s.green * 1.4).clamp(0.0, 1.0),
+                    (s.blue  * 1.4).clamp(0.0, 1.0),
+                    s.alpha,
+                ),
+                _ => country_color,
+            };
+
             parent.spawn((
                 ArmyModel,
                 Mesh3d(meshes.add(Cuboid::new(1.0, 5.0, 1.0))),
                 MeshMaterial3d(materials.add(StandardMaterial {
-                    base_color: Color::srgb_u8(70, 100, 40),
+                    base_color: model_color,
                     cull_mode: None,
                     ..default()
                 })),
@@ -88,6 +114,7 @@ fn render_armies(
                 Text3d::new(format!("{}", army.units)),
                 Mesh3d::default(),
                 MeshMaterial3d(materials.add(StandardMaterial {
+                    base_color: label_color,
                     base_color_texture: Some(TextAtlas::DEFAULT_IMAGE.clone()),
                     alpha_mode: AlphaMode::Blend,
                     unlit: true,

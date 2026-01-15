@@ -3,9 +3,9 @@ use crate::components::player::{ControlsCountry, LocalPlayer};
 use crate::components::province::{Occupied, OwnedBy};
 use crate::plugins::selection::{CurrentSelection, SelectedEntity};
 use crate::states::AppState;
-use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
+use bevy_egui::{EguiPrimaryContextPass, egui};
+use crate::misc::CommandsAndContexts;
 
 pub struct DiplomacyPlugin;
 
@@ -44,22 +44,11 @@ fn on_peace_transfer_occupations(
         if let Ok(occupier_rels) = relations.get(occupier)
             && occupier_rels.get(owned_by.owner) == Relation::Peace
         {
-            let old_owner = owned_by.owner;
+            let _old_owner = owned_by.owner;
             owned_by.owner = occupier;
             commands.entity(prov_entity).remove::<Occupied>();
-
-            println!(
-                "Immediate peace transfer: Province {:?} from {:?} to occupier {:?}",
-                prov_entity, old_owner, occupier
-            );
         }
     }
-}
-
-#[derive(SystemParam)]
-struct CommandsAndContexts<'w, 's> {
-    commands: Commands<'w, 's>,
-    contexts: EguiContexts<'w, 's>,
 }
 
 fn diplomacy_window(
@@ -175,7 +164,7 @@ fn diplomacy_window(
                         );
                     }
                 } else {
-                    ui.colored_label(egui::Color32::RED, "No diplomatic relations data");
+                    ui.colored_label(egui::Color32::RED, "No diplomatic relations set");
                 }
             });
         });

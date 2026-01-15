@@ -143,7 +143,7 @@ fn generate_provinces(province_defs: &[ProvinceDef], map_size: Vec2) -> Vec<Prov
         .collect()
 }
 
-fn build_voronoi(centers: &[Vec2], map_size: Vec2) -> Option<voronoice::Voronoi> {
+fn build_voronoi(centers: &[Vec2], map_size: Vec2) -> Option<Voronoi> {
     let sites: Vec<Point> = centers
         .iter()
         .map(|p| Point {
@@ -152,24 +152,19 @@ fn build_voronoi(centers: &[Vec2], map_size: Vec2) -> Option<voronoice::Voronoi>
         })
         .collect();
 
-    // println!("sites generated:");
-    // for s in &sites {
-    //     println!("{:?}", s);
-    // }
-
-    let padding = 1.01;
+    const PADDING: f32 = 1.01;
 
     voronoice::VoronoiBuilder::default()
         .set_sites(sites)
         .set_bounding_box(voronoice::BoundingBox::new(
             Point { x: 0.0, y: 0.0 },
-            (map_size.x * padding) as f64,
-            (map_size.y * padding) as f64,
+            (map_size.x * PADDING) as f64,
+            (map_size.y * PADDING) as f64,
         ))
         .build()
 }
 
-fn extract_polygons(diagram: &voronoice::Voronoi) -> Vec<Vec<Vec2>> {
+fn extract_polygons(diagram: &Voronoi) -> Vec<Vec<Vec2>> {
     diagram
         .cells()
         .iter()
