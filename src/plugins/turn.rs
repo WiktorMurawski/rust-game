@@ -497,7 +497,7 @@ fn ai_propose_peace(
             .filter(|&e| {
                 relations
                     .get(country_entity)
-                    .map_or(false, |r| r.get(e) == Relation::War)
+                    .is_ok_and(|r| r.get(e) == Relation::War)
             })
             .collect();
 

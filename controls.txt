@@ -1,3 +1,8 @@
 W/A/S/D - camera movement
 B - borders display on/off
 M - switch map display mode
+
+F5 - quicksave
+
+LMB - selection of province/army
+RMB - move order
