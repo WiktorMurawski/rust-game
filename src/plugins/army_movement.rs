@@ -20,7 +20,7 @@ impl Plugin for ArmyMovementPlugin {
     }
 }
 
-#[derive(SystemParam)]
+#[derive(SystemParam, Copy, Clone, Debug)]
 struct ArmyMoveQueries<'w, 's> {
     armies: Query<'w, 's, &'static Army>,
     pending_moves: Query<'w, 's, &'static PendingMove>,

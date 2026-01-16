@@ -10,5 +10,5 @@ pub struct Player {
 #[derive(Component)]
 pub struct ControlsCountry(pub Entity);
 
-#[derive(Resource)]
+#[derive(Resource, Copy, Clone, Debug)]
 pub struct LocalPlayer(pub Entity);

@@ -24,7 +24,7 @@ impl Plugin for SelectionPlugin {
 #[derive(Component)]
 pub struct Selected;
 
-#[derive(Resource, Default, Debug)]
+#[derive(Resource, Default, Copy, Clone, Debug)]
 pub struct CurrentSelection {
     pub entity: Option<SelectedEntity>,
 }
