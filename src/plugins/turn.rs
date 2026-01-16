@@ -11,11 +11,12 @@ use rand::prelude::IndexedRandom;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum TurnResolutionSet {
+    AIDecision,
     Movement,
     Combat,
     Occupation,
     Economy,
-    AIDecision,
+    // Event,
     End,
 }
 
@@ -31,6 +32,7 @@ impl Plugin for TurnPlugin {
                 TurnResolutionSet::Combat,
                 TurnResolutionSet::Occupation,
                 TurnResolutionSet::Economy,
+                // TurnResolutionSet::Event,
                 TurnResolutionSet::End,
             )
                 .chain()
@@ -58,6 +60,11 @@ impl Plugin for TurnPlugin {
             resolve_occupation.in_set(TurnResolutionSet::Occupation),
         )
         .add_systems(Update, process_economy.in_set(TurnResolutionSet::Economy))
+        // .add_systems(Update, generate_random_event.in_set(TurnResolutionSet::End))
+        // .add_systems(
+        //         EguiPrimaryContextPass,
+        //         event_window_ui.run_if(in_state(GamePhase::Event)),
+        //     )
         .add_systems(
             Update,
             crate::misc::empty_function.in_set(TurnResolutionSet::End),

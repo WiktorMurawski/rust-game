@@ -39,6 +39,9 @@ fn end_turn_ui(
                     GamePhase::Processing => {
                         egui::RichText::new("Processing...").color(egui::Color32::LIGHT_BLUE)
                     }
+                    GamePhase::Event => {
+                        egui::RichText::new("Event").color(egui::Color32::LIGHT_BLUE)
+                    }
                 };
                 ui.label(phase_text);
 

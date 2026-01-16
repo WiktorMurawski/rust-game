@@ -5,6 +5,7 @@ pub enum GamePhase {
     #[default]
     PlayerTurn,
     Processing,
+    Event,
 }
 
 #[derive(Resource, Default)]
