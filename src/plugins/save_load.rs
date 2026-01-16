@@ -338,30 +338,82 @@ fn save_game_on_key(
     local_player: Option<Res<LocalPlayer>>,
     player_query: Query<&ControlsCountry>,
 ) {
-    if keyboard.just_pressed(KeyCode::F5)
-        && let Err(e) = save_game(
-            countries,
-            armies,
-            provinces,
-            occupied_provinces,
-            local_player,
-            player_query,
-            "saves/quicksave.ron",
-        ) {
-            eprintln!("Failed to save game: {:?}", e);
+    if !keyboard.just_pressed(KeyCode::F5) {
+        return;
+    }
+
+    // 1. Collect data on the main thread (very fast, safe)
+    let save_data = match collect_save_data(
+        &countries,
+        &armies,
+        &provinces,
+        &occupied_provinces,
+        local_player,
+        &player_query,
+    ) {
+        Ok(data) => data,
+        Err(e) => {
+            eprintln!("Failed to prepare save data: {e:?}");
+            return;
         }
+    };
+
+    // 2. Spawn a detached thread that does the slow part
+    std::thread::spawn(move || {
+        if let Err(e) = save_to_disk(&save_data, "saves/quicksave.ron") {
+            eprintln!("Save failed in background thread: {e:?}");
+            // You could also write to a file or send via channel if you want UI feedback
+        } else {
+            println!("Background save completed → saves/quicksave.ron");
+        }
+    });
+
+    // Immediately return control to Bevy → game stays responsive
+    println!("Save started in background...");
 }
 
+fn save_to_disk(save_data: &SaveData, path: &str) -> Result<()> {
+    std::fs::create_dir_all("saves")?;
 
-pub fn save_game(
-    countries: Query<(&Country, &Relations)>,
-    armies: Query<&Army>,
-    provinces: Query<(&Province, Option<&OwnedBy>)>,
-    occupied_provinces: Query<(&Province, &Occupied)>,
-    local_player: Option<Res<crate::components::player::LocalPlayer>>,
-    player_query: Query<&crate::components::player::ControlsCountry>,
-    path: &str,
-) -> Result<()> {
+    let pretty_config = ron::ser::PrettyConfig::default();
+    let serialized = ron::ser::to_string_pretty(save_data, pretty_config)?;
+
+    std::fs::write(path, serialized)?;
+
+    Ok(())
+}
+
+// fn save_game_on_key(
+//     keyboard: Res<ButtonInput<KeyCode>>,
+//     countries: Query<(&Country, &Relations)>,
+//     armies: Query<&Army>,
+//     provinces: Query<(&Province, Option<&OwnedBy>)>,
+//     occupied_provinces: Query<(&Province, &Occupied)>,
+//     local_player: Option<Res<LocalPlayer>>,
+//     player_query: Query<&ControlsCountry>,
+// ) {
+//     if keyboard.just_pressed(KeyCode::F5)
+//         && let Err(e) = save_game(
+//             countries,
+//             armies,
+//             provinces,
+//             occupied_provinces,
+//             local_player,
+//             player_query,
+//             "saves/quicksave.ron",
+//         ) {
+//             eprintln!("Failed to save game: {:?}", e);
+//         }
+// }
+
+fn collect_save_data(
+    countries: &Query<(&Country, &Relations)>,
+    armies: &Query<&Army>,
+    provinces: &Query<(&Province, Option<&OwnedBy>)>,
+    occupied_provinces: &Query<(&Province, &Occupied)>,
+    local_player: Option<Res<LocalPlayer>>,
+    player_query: &Query<&ControlsCountry>,
+) -> Result<SaveData, anyhow::Error> {
     let mut country_data = Vec::new();
 
     for (country, relations) in countries.iter() {
@@ -430,24 +482,109 @@ pub fn save_game(
             .map(|(country, _)| country.id)
     });
 
-    let save_data = SaveData {
+    Ok(SaveData {
         countries: country_data,
         armies: army_data,
         occupied_provinces: occupied_data,
         player_country_id,
-    };
-
-    std::fs::create_dir_all("saves").context("Failed to create saves directory")?;
-
-    let serialized = ron::ser::to_string_pretty(&save_data, Default::default())
-        .context("Failed to serialize save data")?;
-
-    std::fs::write(path, serialized)
-        .with_context(|| format!("Failed to write save file to '{}'", path))?;
-
-    println!("Game saved to {}", path);
-    Ok(())
+    })
 }
+
+// pub fn save_game(
+//     countries: Query<(&Country, &Relations)>,
+//     armies: Query<&Army>,
+//     provinces: Query<(&Province, Option<&OwnedBy>)>,
+//     occupied_provinces: Query<(&Province, &Occupied)>,
+//     local_player: Option<Res<crate::components::player::LocalPlayer>>,
+//     player_query: Query<&crate::components::player::ControlsCountry>,
+//     path: &str,
+// ) -> Result<()> {
+//     let mut country_data = Vec::new();
+//
+//     for (country, relations) in countries.iter() {
+//         let owned_provinces: Vec<u32> = provinces
+//             .iter()
+//             .filter_map(|(province, owner)| {
+//                 owner.and_then(|o| {
+//                     if countries.get(o.owner).ok()?.0.id == country.id {
+//                         Some(province.id)
+//                     } else {
+//                         None
+//                     }
+//                 })
+//             })
+//             .collect();
+//
+//         // Convert entity-based relations to ID-based relations
+//         let mut relation_map = HashMap::new();
+//         for (other_entity, relation) in &relations.relations {
+//             if let Ok((other_country, _)) = countries.get(*other_entity) {
+//                 relation_map.insert(other_country.id, *relation);
+//             }
+//         }
+//
+//         country_data.push(CountrySaveData {
+//             id: country.id,
+//             name: country.name.clone(),
+//             color: country.color,
+//             owned_provinces,
+//             gold: country.gold,
+//             flag_path: country.flag_path.clone(),
+//             relations: relation_map,
+//         });
+//     }
+//
+//     // Save armies
+//     let mut army_data = Vec::new();
+//     for army in armies.iter() {
+//         if let (Ok((owner_country, _)), Ok((province, _))) =
+//             (countries.get(army.owner), provinces.get(army.province))
+//         {
+//             army_data.push(ArmySaveData {
+//                 owner_id: owner_country.id,
+//                 province_id: province.id,
+//                 units: army.units,
+//             });
+//         }
+//     }
+//
+//     // Save occupied provinces
+//     let mut occupied_data = Vec::new();
+//     for (province, occupied) in occupied_provinces.iter() {
+//         if let Ok((occupier_country, _)) = countries.get(occupied.occupier) {
+//             occupied_data.push(OccupiedData {
+//                 province_id: province.id,
+//                 occupier_id: occupier_country.id,
+//             });
+//         }
+//     }
+//
+//     let player_country_id = local_player.and_then(|lp| {
+//         player_query
+//             .get(lp.0)
+//             .ok()
+//             .and_then(|controls| countries.get(controls.0).ok())
+//             .map(|(country, _)| country.id)
+//     });
+//
+//     let save_data = SaveData {
+//         countries: country_data,
+//         armies: army_data,
+//         occupied_provinces: occupied_data,
+//         player_country_id,
+//     };
+//
+//     std::fs::create_dir_all("saves").context("Failed to create saves directory")?;
+//
+//     let serialized = ron::ser::to_string_pretty(&save_data, Default::default())
+//         .context("Failed to serialize save data")?;
+//
+//     std::fs::write(path, serialized)
+//         .with_context(|| format!("Failed to write save file to '{}'", path))?;
+//
+//     println!("Game saved to {}", path);
+//     Ok(())
+// }
 
 fn load_save_file(path: &str) -> Result<SaveData> {
     let file = std::fs::read_to_string(path)
