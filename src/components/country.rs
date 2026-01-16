@@ -45,12 +45,12 @@ mod color_def {
     }
 }
 
-#[derive(Component, Default, Clone)]
+#[derive(Component, Default, Clone, Serialize, Deserialize)]
 pub struct Relations {
     pub relations: HashMap<Entity, Relation>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Relation {
     Peace,
     War,

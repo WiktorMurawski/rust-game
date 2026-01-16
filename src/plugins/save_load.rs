@@ -8,6 +8,7 @@ use anyhow::{Context, Result};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+use crate::components::army::Army;
 
 pub struct SaveLoadPlugin;
 
@@ -32,8 +33,8 @@ pub struct SaveFilePath(pub String);
 #[derive(Serialize, Deserialize)]
 pub struct SaveData {
     pub countries: Vec<CountrySaveData>,
+    pub armies: Vec<ArmySaveData>,
     pub player_country_id: Option<u32>,
-    // Add more: armies, resources, etc.
 }
 
 #[derive(Serialize, Deserialize)]
@@ -45,6 +46,14 @@ pub struct CountrySaveData {
     pub gold: u32,
     pub owned_provinces: Vec<u32>,
     pub flag_path: Option<String>,
+    pub relations: HashMap<u32, Relation>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ArmySaveData {
+    pub owner_id: u32,          // country ID, not Entity
+    pub province_id: u32,       // province ID
+    pub units: u32,
 }
 
 #[derive(Resource, Default)]
@@ -144,6 +153,7 @@ fn initialize_new_game(
 fn load_saved_game(
     mut commands: Commands,
     province_map: Res<ProvinceEntityMap>,
+    provinces: Query<&Province>,
     save_file_path: Res<SaveFilePath>,
     mut next_state: ResMut<NextState<AppState>>,
     mut error: ResMut<SaveLoadError>,
@@ -152,6 +162,7 @@ fn load_saved_game(
     match load_and_apply_save(
         &mut commands,
         &province_map,
+        &provinces,
         asset_server,
         &save_file_path.0,
     ) {
@@ -170,11 +181,13 @@ fn load_saved_game(
 fn load_and_apply_save(
     commands: &mut Commands,
     province_map: &ProvinceEntityMap,
+    provinces: &Query<&Province>,
     asset_server: Res<AssetServer>,
     path: &str,
 ) -> Result<()> {
     let save_data = load_save_file(path)?;
 
+    // First pass: create all countries
     let mut country_entities = HashMap::new();
     for country_data in &save_data.countries {
         let flag = country_data
@@ -200,10 +213,26 @@ fn load_and_apply_save(
         }
 
         let country_entity = builder.id();
-
         country_entities.insert(country_data.id, country_entity);
     }
 
+    // Second pass: set up relations between countries
+    for country_data in &save_data.countries {
+        let country_entity = *country_entities
+            .get(&country_data.id)
+            .context("Country entity not found")?;
+
+        let mut relations = Relations::default();
+        for (&other_id, &relation_data) in &country_data.relations {
+            if let Some(&other_entity) = country_entities.get(&other_id) {
+                relations.set(other_entity, relation_data.into());
+            }
+        }
+
+        commands.entity(country_entity).insert(relations);
+    }
+
+    // Third pass: assign provinces to countries
     for country_data in &save_data.countries {
         let country_entity = *country_entities
             .get(&country_data.id)
@@ -221,6 +250,36 @@ fn load_and_apply_save(
         }
     }
 
+    // Fourth pass: create armies
+    for army_data in &save_data.armies {
+        let owner_entity = *country_entities
+            .get(&army_data.owner_id)
+            .with_context(|| format!("Army owner {} not found", army_data.owner_id))?;
+
+        let province_entity = *province_map
+            .0
+            .get(&army_data.province_id)
+            .with_context(|| format!("Army province {} not found", army_data.province_id))?;
+
+        let province = provinces
+            .get(province_entity)
+            .with_context(|| format!("Province component not found for entity"))?;
+
+        commands.spawn((
+            Army {
+                owner: owner_entity,
+                province: province_entity,
+                units: army_data.units,
+            },
+            Transform::from_xyz(province.center.x, 0.0, province.center.y),
+            GlobalTransform::default(),
+            Visibility::Visible,
+            InheritedVisibility::default(),
+            ViewVisibility::default(),
+        ));
+    }
+
+    // Finally: set up player
     if let Some(saved_country_id) = save_data.player_country_id {
         if let Some(&country_entity) = country_entities.get(&saved_country_id) {
             let player_entity = commands
@@ -249,39 +308,42 @@ fn load_and_apply_save(
 
 fn save_game_on_key(
     keyboard: Res<ButtonInput<KeyCode>>,
-    countries: Query<&Country>,
+    countries: Query<(&Country, &Relations)>,
+    armies: Query<&Army>,
     provinces: Query<(&Province, Option<&OwnedBy>)>,
     local_player: Option<Res<LocalPlayer>>,
     player_query: Query<&ControlsCountry>,
 ) {
-    if keyboard.just_pressed(KeyCode::F5)
-        && let Err(e) = save_game(
+    if keyboard.just_pressed(KeyCode::F5) {
+        if let Err(e) = save_game(
             countries,
+            armies,
             provinces,
             local_player,
             player_query,
             "saves/quicksave.ron",
-        )
-    {
-        eprintln!("Failed to save game: {:?}", e);
+        ) {
+            eprintln!("Failed to save game: {:?}", e);
+        }
     }
 }
 
 pub fn save_game(
-    countries: Query<&Country>,
+    countries: Query<(&Country, &Relations)>,
+    armies: Query<&Army>,
     provinces: Query<(&Province, Option<&OwnedBy>)>,
-    local_player: Option<Res<crate::components::player::LocalPlayer>>,
-    player_query: Query<&crate::components::player::ControlsCountry>,
+    local_player: Option<Res<LocalPlayer>>,
+    player_query: Query<&ControlsCountry>,
     path: &str,
 ) -> Result<()> {
     let mut country_data = Vec::new();
 
-    for country in countries.iter() {
+    for (country, relations) in countries.iter() {
         let owned_provinces: Vec<u32> = provinces
             .iter()
             .filter_map(|(province, owner)| {
                 owner.and_then(|o| {
-                    if countries.get(o.owner).ok()?.id == country.id {
+                    if countries.get(o.owner).ok()?.0.id == country.id {
                         Some(province.id)
                     } else {
                         None
@@ -290,6 +352,14 @@ pub fn save_game(
             })
             .collect();
 
+        // Convert entity-based relations to ID-based relations
+        let mut relation_map = HashMap::new();
+        for (other_entity, relation) in &relations.relations {
+            if let Ok((other_country, _)) = countries.get(*other_entity) {
+                relation_map.insert(other_country.id, (*relation).into());
+            }
+        }
+
         country_data.push(CountrySaveData {
             id: country.id,
             name: country.name.clone(),
@@ -297,7 +367,22 @@ pub fn save_game(
             owned_provinces,
             gold: country.gold,
             flag_path: country.flag_path.clone(),
+            relations: relation_map,
         });
+    }
+
+    // Save armies
+    let mut army_data = Vec::new();
+    for army in armies.iter() {
+        if let (Ok((owner_country, _)), Ok((province, _))) =
+            (countries.get(army.owner), provinces.get(army.province))
+        {
+            army_data.push(ArmySaveData {
+                owner_id: owner_country.id,
+                province_id: province.id,
+                units: army.units,
+            });
+        }
     }
 
     let player_country_id = local_player.and_then(|lp| {
@@ -305,11 +390,12 @@ pub fn save_game(
             .get(lp.0)
             .ok()
             .and_then(|controls| countries.get(controls.0).ok())
-            .map(|country| country.id)
+            .map(|(country, _)| country.id)
     });
 
     let save_data = SaveData {
         countries: country_data,
+        armies: army_data,
         player_country_id,
     };
 

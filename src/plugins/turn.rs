@@ -42,7 +42,8 @@ impl Plugin for TurnPlugin {
                 ai_build_buildings,
                 ai_recruit_armies.after(ai_build_buildings),
                 ai_move_armies.after(ai_recruit_armies),
-                ai_declare_war.after(ai_move_armies),
+                // ai_declare_war.after(ai_move_armies),
+                ai_diplomacy.after(ai_move_armies),
             )
                 .in_set(TurnResolutionSet::AIDecision)
                 .run_if(in_state(AppState::InGame)),
@@ -418,20 +419,31 @@ fn ai_move_armies(
     }
 }
 
+fn ai_diplomacy(
+    commands: Commands,
+    ai_countries: Query<(Entity, &Country), With<AIControlled>>,
+    relations: Query<&mut Relations>,
+    countries: Query<Entity, With<Country>>,
+){
+    let r = rand::rng().random_range(0.0..1.0);
+    if r < 0.2{
+        ai_declare_war(commands,ai_countries,relations,countries);
+    }
+    else if r < 0.4 {
+        ai_propose_peace(commands,ai_countries,relations,countries);
+    }
+}
+
+
 fn ai_declare_war(
     mut commands: Commands,
     ai_countries: Query<(Entity, &Country), With<AIControlled>>,
     mut relations: Query<&mut Relations>,
     countries: Query<Entity, With<Country>>,
 ) {
-    // println!("ai_declare_war");
     let mut rng = rand::rng();
 
     for (country_entity, _) in &ai_countries {
-        if !rng.random_bool(0.20) {
-            continue;
-        }
-
         let possible_targets: Vec<Entity> = countries
             .iter()
             .filter(|&e| e != country_entity)
@@ -464,6 +476,53 @@ fn ai_declare_war(
 
         println!(
             "AI country {:?} declared war on {:?}",
+            country_entity, target
+        );
+    }
+}
+
+fn ai_propose_peace(
+    mut commands: Commands,
+    ai_countries: Query<(Entity, &Country), With<AIControlled>>,
+    mut relations: Query<&mut Relations>,
+    countries: Query<Entity, With<Country>>,
+) {
+    println!("ai_propose_peace");
+    let mut rng = rand::rng();
+
+    for (country_entity, _) in &ai_countries {
+        let possible_targets: Vec<Entity> = countries
+            .iter()
+            .filter(|&e| e != country_entity)
+            .filter(|&e| {
+                relations
+                    .get(country_entity)
+                    .map_or(false, |r| r.get(e) == Relation::War)
+            })
+            .collect();
+
+        if possible_targets.is_empty() {
+            continue;
+        }
+
+        let target = possible_targets[rng.random_range(0..possible_targets.len())];
+
+        if let Ok(mut my_rels) = relations.get_mut(country_entity) {
+            my_rels.set(target, Relation::Peace);
+        }
+
+        if let Ok(mut target_rels) = relations.get_mut(target) {
+            target_rels.set(country_entity, Relation::Peace);
+        }
+
+        commands.trigger(DiplomacyChanged {
+            declarer: country_entity,
+            target,
+            new_relation: Relation::Peace,
+        });
+
+        println!(
+            "AI country {:?} made peace with {:?}",
             country_entity, target
         );
     }
