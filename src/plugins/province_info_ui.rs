@@ -6,7 +6,7 @@ use crate::plugins::selection::SelectedEntity;
 use crate::states::AppState;
 use bevy::app::Plugin;
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
+use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 pub struct ProvinceInfoUI;
 
@@ -69,11 +69,26 @@ fn province_info_ui(
 
                     ui.separator();
 
+                    let mut province_growth = province.base_growth;
+
+                    for &building in &buildings.built {
+                        province_growth += building.growth_bonus();
+                    }
+
+                    let is_occupied = occupied_opt.is_some();
+                    if is_occupied {
+                        province_growth = -0.05;
+                    }
+
+                    let growth_amount =
+                        (province.population as f32 * province_growth).round() as i32;
+
                     ui.label(format!("Population: {}", province.population));
                     ui.label(format!(
-                        "Growth per turn: +{:.1}% ({:+} people)",
-                        province.base_growth * 100.0,
-                        (province.population as f32 * province.base_growth).round() as i32
+                        "Growth per turn: {}% ({} people)",
+                        province_growth * 100.0,
+                        growth_amount,
+                        //(province.population as f32 * province.base_growth).round() as i32
                     ));
 
                     if !buildings.built.is_empty() {

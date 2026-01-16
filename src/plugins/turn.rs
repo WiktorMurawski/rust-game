@@ -206,7 +206,7 @@ fn process_economy(
 
         let is_occupied = occupied.get(prov_entity).is_ok();
         if is_occupied {
-            province_growth *= 0.0;
+            province_growth = -0.05;
         }
 
         let growth_amount = (province.population as f32 * province_growth).round() as i32;
