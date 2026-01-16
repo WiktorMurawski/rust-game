@@ -1,9 +1,9 @@
 use crate::components::country::{Country, DiplomacyChanged, Relation, Relations};
 use crate::components::province::{Occupied, OwnedBy};
-use crate::misc::{CommandsAndContexts};
+use crate::misc::CommandsAndContexts;
+use crate::misc::PlayerParams;
 use crate::plugins::selection::{CurrentSelection, SelectedEntity};
 use crate::states::AppState;
-use crate::misc::PlayerParams;
 use bevy::prelude::*;
 use bevy_egui::{EguiPrimaryContextPass, egui};
 
@@ -64,8 +64,6 @@ fn on_peace_transfer_occupations(
         }
     }
 }
-
-
 
 fn diplomacy_window(
     commands_and_contexts: CommandsAndContexts,
@@ -162,7 +160,7 @@ fn diplomacy_window(
                             Relation::Peace => &audio.peace_sound,
                         };
 
-                        commands.spawn(AudioPlayer::new(sound.clone())); 
+                        commands.spawn(AudioPlayer::new(sound.clone()));
 
                         player_relations.set(selected_country_entity, new_relation);
 

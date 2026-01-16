@@ -6,7 +6,7 @@ use crate::plugins::selection::SelectedEntity;
 use crate::states::AppState;
 use bevy::app::Plugin;
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 pub struct ProvinceInfoUI;
 

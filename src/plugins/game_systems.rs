@@ -25,6 +25,7 @@ impl Plugin for GameSystems {
             .add_plugins(ArmySystemsPlugin)
             .add_plugins(ArmyMovementPlugin)
             .add_plugins(TurnPlugin)
+            .add_plugins(DiplomacyPlugin)
             // UI
             .add_plugins(SetupEguiCamera)
             .add_plugins(MainMenu)
@@ -34,7 +35,7 @@ impl Plugin for GameSystems {
             .add_plugins(BuildingsUI)
             .add_plugins(ArmyRendering)
             .add_plugins(EndTurnUI)
-            .add_plugins(DiplomacyPlugin);
+            .add_plugins(EventUIPlugin);
     }
 }
 

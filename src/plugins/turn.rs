@@ -3,6 +3,7 @@ use bevy::platform::collections::HashMap;
 use crate::components::army::{Army, HasActedThisTurn, PendingMove};
 use crate::components::buildings::{ALL_BUILDINGS, BuildingType, Buildings};
 use crate::components::country::{AIControlled, Country, DiplomacyChanged, Relation, Relations};
+use crate::components::events::{GameEvent, PendingEvent};
 use crate::components::province::{Occupied, OwnedBy, Province};
 use crate::states::{AppState, GamePhase};
 use bevy::prelude::*;
@@ -16,7 +17,7 @@ pub enum TurnResolutionSet {
     Combat,
     Occupation,
     Economy,
-    // Event,
+    Event,
     End,
 }
 
@@ -32,7 +33,7 @@ impl Plugin for TurnPlugin {
                 TurnResolutionSet::Combat,
                 TurnResolutionSet::Occupation,
                 TurnResolutionSet::Economy,
-                // TurnResolutionSet::Event,
+                TurnResolutionSet::Event,
                 TurnResolutionSet::End,
             )
                 .chain()
@@ -60,11 +61,10 @@ impl Plugin for TurnPlugin {
             resolve_occupation.in_set(TurnResolutionSet::Occupation),
         )
         .add_systems(Update, process_economy.in_set(TurnResolutionSet::Economy))
-        // .add_systems(Update, generate_random_event.in_set(TurnResolutionSet::End))
-        // .add_systems(
-        //         EguiPrimaryContextPass,
-        //         event_window_ui.run_if(in_state(GamePhase::Event)),
-        //     )
+        .add_systems(
+            Update,
+            trigger_random_event.in_set(TurnResolutionSet::Event),
+        )
         .add_systems(
             Update,
             crate::misc::empty_function.in_set(TurnResolutionSet::End),
@@ -246,7 +246,13 @@ fn finish_processing(
     mut commands: Commands,
     pending_moves_q: Query<Entity, With<PendingMove>>,
     mut next_state: ResMut<NextState<GamePhase>>,
+    pending_event: Option<Res<PendingEvent>>,
 ) {
+    if pending_event.is_some() {
+        // println!("Event pending, delaying turn finish");
+        return;
+    }
+
     for entity in &pending_moves_q {
         commands.entity(entity).remove::<PendingMove>();
         commands.entity(entity).remove::<HasActedThisTurn>();
@@ -530,5 +536,25 @@ fn ai_propose_peace(
             "AI country {:?} made peace with {:?}",
             country_entity, target
         );
+    }
+}
+
+fn trigger_random_event(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GamePhase>>,
+    pending_event: Option<Res<PendingEvent>>,
+) {
+    // println!("trigger_random_event");
+    if pending_event.is_some() {
+        return;
+    }
+
+    let mut rng = rand::rng();
+
+    if rng.random_bool(0.5) {
+        let event = GameEvent::generate_random();
+        commands.insert_resource(PendingEvent::new(event));
+        next_state.set(GamePhase::Event);
+        println!("Event triggered!");
     }
 }
