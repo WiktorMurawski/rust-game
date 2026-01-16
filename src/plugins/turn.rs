@@ -424,16 +424,14 @@ fn ai_diplomacy(
     ai_countries: Query<(Entity, &Country), With<AIControlled>>,
     relations: Query<&mut Relations>,
     countries: Query<Entity, With<Country>>,
-){
+) {
     let r = rand::rng().random_range(0.0..1.0);
-    if r < 0.2{
-        ai_declare_war(commands,ai_countries,relations,countries);
-    }
-    else if r < 0.4 {
-        ai_propose_peace(commands,ai_countries,relations,countries);
+    if r < 0.2 {
+        ai_declare_war(commands, ai_countries, relations, countries);
+    } else if r < 0.4 {
+        ai_propose_peace(commands, ai_countries, relations, countries);
     }
 }
-
 
 fn ai_declare_war(
     mut commands: Commands,

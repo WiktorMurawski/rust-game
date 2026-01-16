@@ -89,7 +89,7 @@ mod color_serde {
             g: srgba.green,
             b: srgba.blue,
         }
-            .serialize(serializer)
+        .serialize(serializer)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Color, D::Error>
@@ -286,7 +286,9 @@ fn load_and_apply_save(
         let province_entity = *province_map
             .0
             .get(&occupied_data.province_id)
-            .with_context(|| format!("Occupied province {} not found", occupied_data.province_id))?;
+            .with_context(|| {
+                format!("Occupied province {} not found", occupied_data.province_id)
+            })?;
 
         let occupier_entity = *country_entities
             .get(&occupied_data.occupier_id)

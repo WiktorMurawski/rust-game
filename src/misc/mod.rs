@@ -3,6 +3,8 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::EguiContexts;
 
+use crate::components::player::{ControlsCountry, LocalPlayer};
+
 #[derive(SystemParam)]
 pub struct MouseAndWindowAndCamera<'w, 's> {
     pub mouse: Res<'w, ButtonInput<MouseButton>>,
@@ -14,6 +16,12 @@ pub struct MouseAndWindowAndCamera<'w, 's> {
 pub struct CommandsAndContexts<'w, 's> {
     pub commands: Commands<'w, 's>,
     pub contexts: EguiContexts<'w, 's>,
+}
+
+#[derive(SystemParam)]
+pub struct PlayerParams<'w, 's> {
+    pub local_player: Res<'w, LocalPlayer>,
+    pub player_controls: Query<'w, 's, &'static ControlsCountry>,
 }
 
 pub fn squared_distance(a: Vec2, b: Vec2) -> f32 {

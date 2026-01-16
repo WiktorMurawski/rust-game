@@ -1,9 +1,9 @@
 use crate::components::country::{Country, DiplomacyChanged, Relation, Relations};
-use crate::components::player::{ControlsCountry, LocalPlayer};
 use crate::components::province::{Occupied, OwnedBy};
-use crate::misc::CommandsAndContexts;
+use crate::misc::{CommandsAndContexts};
 use crate::plugins::selection::{CurrentSelection, SelectedEntity};
 use crate::states::AppState;
+use crate::misc::PlayerParams;
 use bevy::prelude::*;
 use bevy_egui::{EguiPrimaryContextPass, egui};
 
@@ -12,12 +12,26 @@ pub struct DiplomacyPlugin;
 impl Plugin for DiplomacyPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Messages::<DiplomacyChanged>::default())
+            .add_systems(PostStartup, setup_audio)
             .add_systems(
                 EguiPrimaryContextPass,
                 diplomacy_window.run_if(in_state(AppState::InGame)),
             )
             .add_observer(on_peace_transfer_occupations);
     }
+}
+
+#[derive(Resource)]
+struct DiplomacyAudio {
+    war_sound: Handle<AudioSource>,
+    peace_sound: Handle<AudioSource>,
+}
+
+fn setup_audio(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(DiplomacyAudio {
+        war_sound: asset_server.load("sounds/war.ogg"),
+        peace_sound: asset_server.load("sounds/peace.ogg"),
+    });
 }
 
 fn on_peace_transfer_occupations(
@@ -51,19 +65,24 @@ fn on_peace_transfer_occupations(
     }
 }
 
+
+
 fn diplomacy_window(
     commands_and_contexts: CommandsAndContexts,
     current_selection: Res<CurrentSelection>,
     provinces: Query<&OwnedBy>,
     countries: Query<&Country>,
     mut relations_q: Query<&mut Relations>,
-    local_player: Res<LocalPlayer>,
-    player_controls: Query<&ControlsCountry>,
+    player_params: PlayerParams,
+    //local_player: Res<LocalPlayer>,
+    //player_controls: Query<&ControlsCountry>,
+    audio: Res<DiplomacyAudio>,
 ) {
-    let (mut commands, mut contexts) = (
-        commands_and_contexts.commands,
-        commands_and_contexts.contexts,
-    );
+    let mut commands = commands_and_contexts.commands;
+    let mut contexts = commands_and_contexts.contexts;
+
+    let local_player = player_params.local_player;
+    let player_controls = player_params.player_controls;
 
     let ctx = match contexts.ctx_mut() {
         Ok(ctx) => ctx,
@@ -137,6 +156,13 @@ fn diplomacy_window(
                             Relation::Peace => Relation::War,
                             Relation::War => Relation::Peace,
                         };
+
+                        let sound = match new_relation {
+                            Relation::War => &audio.war_sound,
+                            Relation::Peace => &audio.peace_sound,
+                        };
+
+                        commands.spawn(AudioPlayer::new(sound.clone())); 
 
                         player_relations.set(selected_country_entity, new_relation);
 
